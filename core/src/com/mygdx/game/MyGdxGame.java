@@ -15,13 +15,16 @@ import org.w3c.dom.Text;
 public class MyGdxGame extends ApplicationAdapter {
 
 	public enum GameState { PLAYING, COMPLETE, PAUSED }
+	public enum PlayerState {IDLE, MOVING, DYING, SHOOTING }
 
 	public static final float MOVEMENT_SPEED = 200.0f;
 
 	GameState gameState = GameState.PLAYING;
 
 	//Map and rendering
-	SpriteBatch batch;
+	SpriteBatch WalkingBatch;
+	SpriteBatch DryingBatch;
+	SpriteBatch ShootingBatch;
 	SpriteBatch uiBatch;
 	OrthographicCamera camera;
 
@@ -29,6 +32,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	float dt;
 
 	//Player Character
+	boolean isAlive;
+	boolean isShooting;
+	boolean isMoving;
+
+	//Texture
 	Texture playerTexture;
 
 	Texture playerWalkingTexture;
@@ -44,6 +52,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Animation playerShootingAnimation;
 
 	private TextureRegion currentFrame;
+	private TextureRegion currentFrame2;
 	private float stateTime;
 
 	//UI Buttons
@@ -56,26 +65,56 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void create () {
 
+		isAlive = true;
+		isShooting = false;
+		isMoving = false;
+
+		int index;
+
 		//Player Walking Texture Build
 		int walkingFrameCol = 3;
 		int WalkingFrameRow = 6;
 		playerWalkingTexture = new Texture(Gdx.files.internal("player/moving.png"));
-		batch = new SpriteBatch();
-		TextureRegion[][] temp = TextureRegion.split(playerWalkingTexture, playerWalkingTexture.getWidth() / walkingFrameCol, playerWalkingTexture.getHeight() / WalkingFrameRow);
+		WalkingBatch = new SpriteBatch();
+		TextureRegion[][] walkTemp = TextureRegion.split(playerWalkingTexture, playerWalkingTexture.getWidth() / walkingFrameCol, playerWalkingTexture.getHeight() / WalkingFrameRow);
 		playerWalkingFrames = new TextureRegion[walkingFrameCol * WalkingFrameRow];
-		int index = 0;
+		index = 0;
 		for (int i = 0; i < WalkingFrameRow; i++) {
 			for (int j = 0; j < walkingFrameCol; j++) {
-				playerWalkingFrames[index++] = temp[i][j];
+				playerWalkingFrames[index++] = walkTemp[i][j];
 			}
 		}
 		playerWalkingAnimation = new Animation(0.033f, playerWalkingFrames);
 
 		//Player Shooting Texture Build
+		int DyingFrameCol = 3;
+		int DyingFrameRow = 4;
 		playerDyingTexture = new Texture(Gdx.files.internal("player/shooting.png"));
+		DryingBatch = new SpriteBatch();
+		TextureRegion[][] dieTemp = TextureRegion.split(playerDyingTexture, playerDyingTexture.getWidth() / DyingFrameCol, playerDyingTexture.getHeight() / DyingFrameRow);
+		playerDyingFrames = new TextureRegion[DyingFrameCol * DyingFrameRow];
+		index = 0;
+		for (int i = 0; i < DyingFrameRow; i++) {
+			for (int j = 0; j < DyingFrameCol; j++) {
+				playerDyingFrames[index++] = dieTemp[i][j];
+			}
+		}
+		playerDyingAnimation = new Animation(0.033f, playerDyingFrames);
 
 		//Player Dying Texture Build
+		int ShootingFrameCol = 5;
+		int ShootingFrameRow = 4;
 		playerShootingTexture = new Texture(Gdx.files.internal("player/dying.png"));
+		ShootingBatch = new SpriteBatch();
+		TextureRegion[][] shootTemp = TextureRegion.split(playerShootingTexture, playerShootingTexture.getWidth() / ShootingFrameCol, playerShootingTexture.getHeight() / ShootingFrameRow);
+		playerShootingFrames = new TextureRegion[ShootingFrameCol * ShootingFrameRow];
+		index = 0;
+		for (int i = 0; i < ShootingFrameRow; i++) {
+			for (int j = 0; j < ShootingFrameCol; j++) {
+				playerShootingFrames[index++] = shootTemp[i][j];
+			}
+		}
+		playerShootingAnimation = new Animation(0.033f, playerShootingFrames);
 
 		stateTime = 0.0f;
 	}
@@ -88,9 +127,9 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		currentFrame = (TextureRegion) playerWalkingAnimation.getKeyFrame(stateTime, true);
 
-		batch.begin();
-		batch.draw(currentFrame,1,1);
-		batch.end();
+		WalkingBatch.begin();
+		WalkingBatch.draw(currentFrame,1,1);
+		WalkingBatch.end();
 	}
 	
 	@Override
