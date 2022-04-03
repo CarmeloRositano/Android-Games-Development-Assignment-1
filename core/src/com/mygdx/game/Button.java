@@ -11,22 +11,30 @@ public class Button {
     float w;
     float h;
     boolean isDown = false;
+    boolean isDownPrev = false;
 
     Texture textureUp;
     Texture textureDown;
 
-    public Button(Texture textureUp, Texture textureDown) {
-        this.textureDown = textureDown;
+    public Button(float x, float y, float w, float h, Texture textureUp, Texture textureDown) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+
         this.textureUp = textureUp;
+        this.textureDown = textureDown;
     }
 
-    public void update(float x, float y, float w, float h, boolean checkTouch, int touchX, int touchY) {
+    public void update(boolean checkTouch, int touchX, int touchY) {
         isDown = false;
 
         if (checkTouch) {
-            int touchHeight = Gdx.graphics.getHeight();
+            int h2 = Gdx.graphics.getHeight();
+            //Touch coordinates have origin in top-left instead of bottom left
 
-            if (touchX >= x && touchX <= x + w && touchHeight - touchY >= y && touchHeight - touchY <= y + h) {
+            isDownPrev = isDown;
+            if (touchX >= x && touchX <= x + w && h2 - touchY >= y && h2 - touchY <= y + h) {
                 isDown = true;
             }
         }
@@ -40,4 +48,7 @@ public class Button {
         }
     }
 
+    public boolean justPressed() {
+        return isDown && !isDownPrev;
+    }
 }

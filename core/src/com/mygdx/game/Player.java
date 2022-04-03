@@ -2,29 +2,45 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 
 public class Player {
 
     public enum PlayerState { RUNNING, JUMPING, DYING, DEAD, SHOOTING }
 
-    PlayerState currentPlayerState;
-    int characterX;
-    int characterY;
+    private static final float MOVEMENT_SPEED = 100.0f;
 
+    private static final float GRAVITY = 98f;
+
+    PlayerState currentPlayerState;
+
+    Sprite playerSprite = new Sprite();
+
+    Texture playerTexture;
+    Vector2 playerDelta;
+    Rectangle playerDeltaRectangle;
     Texture playerWalkingTexture;
     private TextureRegion[] playerWalkingFrames;
+
     private Animation playerWalkingAnimation;
 
     //Game Clock
-    float dt;
 
+    float dt;
     private TextureRegion currentFrame;
 
     public Player() {
         currentPlayerState = PlayerState.RUNNING;
+
+        playerSprite.setSize(256,256);
+        playerDelta = new Vector2();
+        playerDeltaRectangle = new Rectangle(playerSprite.getX(), playerSprite.getY(), playerSprite.getWidth(), playerSprite.getHeight());
 
         //Player Walking Texture Build
         int walkingFrameCol = 3;
@@ -39,6 +55,10 @@ public class Player {
             }
         }
         playerWalkingAnimation = new Animation(0.033f, playerWalkingFrames);
+
+        updateCurrentPlayerState();
+
+
         dt = 0.0f;
     }
 
@@ -48,8 +68,9 @@ public class Player {
 
         switch (currentPlayerState) {
             case RUNNING:
-                System.out.println(dt);
                 currentFrame = (TextureRegion) playerWalkingAnimation.getKeyFrame(dt, true);
+                playerSprite.setRegion(currentFrame);
+
                 break;
 
             case DYING:
@@ -68,21 +89,41 @@ public class Player {
         }
     }
 
-    //Getters and Setters
-    public PlayerState getCurrentPlayerState() { return currentPlayerState; }
 
+    //Getters and Setters
+
+    public PlayerState getCurrentPlayerState() { return currentPlayerState; }
     public TextureRegion getCurrentFrame() { return currentFrame; }
 
     public void setCurrentFrame(TextureRegion currentFrame) {
         this.currentFrame = currentFrame;
     }
-
     public Animation getPlayerWalkingAnimation() {
         return playerWalkingAnimation;
     }
 
     public void setPlayerWalkingAnimation(Animation playerWalkingAnimation) {
         this.playerWalkingAnimation = playerWalkingAnimation;
+    }
+
+    public static float getMovementSpeed() {
+        return MOVEMENT_SPEED;
+    }
+
+    public Vector2 getPlayerDelta() {
+        return playerDelta;
+    }
+
+    public void setPlayerDeltaX(float playerDeltaX) {
+        this.playerDelta.x = playerDeltaX;
+    }
+
+    public void setPlayerDeltaY(float playerDeltaY) {
+        this.playerDelta.y = playerDeltaY;
+    }
+
+    public static float getGRAVITY() {
+        return GRAVITY;
     }
 
 }
