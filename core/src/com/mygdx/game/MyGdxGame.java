@@ -27,8 +27,6 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	public enum GameState { PLAYING, PAUSED, COMPLETE }
 
-	private final float gravity = 5f;
-
 	GameState gameState;
 
 	TiledGameMap gameMap;
@@ -171,59 +169,14 @@ public class MyGdxGame extends ApplicationAdapter {
 					moveY += 1;
 				}
 
-				//TODO Check collision
+				//Collision layer build
 				MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
 				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
 
-				//TODO Determine Character Movement Distance
+				//Character and Camera Movement
 				player.movePlayer(moveX, moveY, tileLayer);
 				camera.translate(player.getConstantSpeed() * player.dt, 0f);
 				camera.update();
-
-//				//TODO Check movement against grid
-//				if (player.getPlayerDelta().len2() > 0) { //Don't do anything if we're not moving
-//					//Retrieve Collision layer
-//					MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
-//					TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
-//
-//					//TODO Determine bounds to check within
-//					// Find top-right corner tile
-//					int right = (int) Math.ceil(Math.max(player.playerSprite.getX() + player.playerSprite.getWidth(), player.playerSprite.getX() + player.playerSprite.getWidth() + player.getPlayerDelta().x));
-//					int top = (int) Math.ceil(Math.max(player.playerSprite.getY() + player.playerSprite.getHeight(), player.playerSprite.getY() + player.playerSprite.getHeight() + player.getPlayerDelta().y));
-//
-//					// Find bottom-left corner tile
-//					int left = (int) Math.floor(Math.min(player.playerSprite.getX(), player.playerSprite.getX() + player.getPlayerDelta().x));
-//					int bottom = (int) Math.floor(Math.min(player.playerSprite.getY(), player.playerSprite.getY() + player.getPlayerDelta().y));
-//
-//					// Divide bounds by tile sizes to retrieve tile indices
-//					right /= tileLayer.getTileWidth();
-//					top /= tileLayer.getTileHeight();
-//					left /= tileLayer.getTileWidth();
-//					bottom /= tileLayer.getTileHeight();
-//
-//					//TODO Loop through selected tiles and correct by each axis
-//					//EXTRA: Try counting down if moving left or down instead of counting up
-//					for (int y = bottom; y <= top; y++) {
-//						for (int x = left; x <= right; x++) {
-//							TiledMapTileLayer.Cell targetCell = tileLayer.getCell(x, y);
-//							// If the cell is empty, ignore it
-//							if (targetCell == null) continue;
-//							// Otherwise correct against tested squares
-//							tileRectangle.x = x * tileLayer.getTileWidth();
-//							tileRectangle.y = y * tileLayer.getTileHeight();
-//
-//							player.playerDeltaRectangle.x = player.playerSprite.getX() + player.getPlayerDelta().x;
-//							player.playerDeltaRectangle.y = player.playerSprite.getY();
-//							if (tileRectangle.overlaps(player.playerDeltaRectangle)) player.getPlayerDelta().x = 0;
-//
-//							player.playerDeltaRectangle.x = player.playerSprite.getX();
-//							player.playerDeltaRectangle.y = player.playerSprite.getY() + player.playerDelta.y;
-//							if (tileRectangle.overlaps(player.playerDeltaRectangle)) player.getPlayerDelta().y = 0;
-//						}
-//					}
-//
-//				break;
-//			}
 
 		}
 
