@@ -7,8 +7,11 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 
 public class Player {
 
@@ -31,7 +34,6 @@ public class Player {
     private Animation playerWalkingAnimation;
 
     //Game Clock
-
     float dt;
     private TextureRegion currentFrame;
 
@@ -62,6 +64,7 @@ public class Player {
         dt = 0.0f;
     }
 
+    //Updates the currentPlayerState to determine what animation that player sprite should be in
     public void updateCurrentPlayerState() {
 
         dt += Gdx.graphics.getDeltaTime();
@@ -89,6 +92,37 @@ public class Player {
         }
     }
 
+    //Moves the player
+    public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer) {
+        this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + MOVEMENT_SPEED * dt);
+        if(collidesBottom(collisionLayer)) {
+            this.playerDelta.y = ((y * MOVEMENT_SPEED * dt));
+        } else {
+            this.playerDelta.y = ((y * MOVEMENT_SPEED * dt) - GRAVITY * dt);
+            System.out.println("GRAVITY!!!!!!!!!!");
+        }
+        playerSprite.translate(this.playerDelta.x, this.playerDelta.y);
+    }
+
+    private boolean isCellBlocked(float x, float y, TiledMapTileLayer collisionLayer) {
+        TiledMapTileLayer.Cell cell = collisionLayer.getCell((int) (x / collisionLayer.getTileWidth()), (int) (y / collisionLayer.getTileHeight()));
+        return cell != null && cell.getTile() != null;
+    }
+
+    public boolean collidesBottom(TiledMapTileLayer collisionLayer) {
+        boolean collides = false;
+
+        for(float step = 0; step < playerSprite.getWidth(); step += collisionLayer.getTileWidth() / 2) {
+            if(isCellBlocked(playerSprite.getX() + step, playerSprite.getY(), collisionLayer)) {
+                return true;
+            }
+//            if (collides = isCellBlocked(playerSprite.getX() + step, playerSprite.getY(), collisionLayer)) {
+//                break;
+//            }
+//            return collides;
+        }
+        return false;
+    }
 
     //Getters and Setters
 

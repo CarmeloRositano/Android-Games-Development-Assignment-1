@@ -121,8 +121,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		//Apply camera and draw player
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
-//		batch.draw(backgroundGround, 0, 0);
-//		batch.draw(player.playerSprite);
 		player.playerSprite.draw(batch);
 		batch.end();
 
@@ -173,10 +171,12 @@ public class MyGdxGame extends ApplicationAdapter {
 					moveY += 1;
 				}
 
+				//TODO Check collision
+				MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
+				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
+
 				//TODO Determine Character Movement Distance
-				player.setPlayerDeltaX((moveX * player.getMovementSpeed() * player.dt) + player.getMovementSpeed() * player.dt);
-				player.setPlayerDeltaY((moveY * player.getMovementSpeed() * player.dt) - player.getGRAVITY() * player.dt);
-				player.playerSprite.translate(player.playerDelta.x, player.playerDelta.y);
+				player.movePlayer(moveX, moveY, tileLayer);
 				camera.translate(player.getMovementSpeed() * player.dt, 0f);
 				camera.update();
 
@@ -233,15 +233,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		gameState = GameState.PLAYING;
 
 		player.dt = 0.0f;
-//		player.playerSprite.setCenter(150, 77);
 
 		MapLayer objectLayer = gameMap.tiledMap.getLayers().get("Objects");
-//		Player start location, loaded from the tilemaze's object layer.
+
+		//Set player and camera starting location
 		RectangleMapObject playerObject = (RectangleMapObject) objectLayer.getObjects().get("Player");
-		System.out.println(playerObject.getRectangle().x + "\n" +  playerObject.getRectangle().y);
-		player.playerSprite.setCenter(playerObject.getRectangle().x, (float) (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
+		player.playerSprite.setCenter(playerObject.getRectangle().x, (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
 		camera.position.x = player.playerSprite.getX();
-		camera.position.y = player.playerSprite.getY() * 5.23f;
+		camera.position.y = player.playerSprite.getY() * 4.75f; //TODO Optamise camera height when seting up world
 		camera.update();
 
 		restartActive = false;
