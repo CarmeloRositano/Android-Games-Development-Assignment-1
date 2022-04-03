@@ -15,10 +15,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 
 public class Player {
 
-    public enum PlayerState { RUNNING, JUMPING, DYING, DEAD, SHOOTING }
+    public enum PlayerState { RUNNING, DYING, DEAD, SHOOTING }
 
     private static final float MOVEMENT_SPEED = 200.0f;
-    private static final float CONSTANT_SPEED = 100.0f;
+    private static final float CONSTANT_SPEED = 150.0f;
     private static final float GRAVITY = 98f;
 
     boolean canJump;
@@ -84,10 +84,6 @@ public class Player {
             case DYING:
                 //TODO If dying animation.isFinished()
                 //currentPlayerState = PlayerState.DEAD;
-                break;
-
-            case JUMPING:
-                //TODO If isOnGround() set player to RUNNING
                 break;
 
             case SHOOTING:

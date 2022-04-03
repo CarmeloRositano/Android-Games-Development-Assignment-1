@@ -36,6 +36,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch uiBatch;
 	OrthographicCamera camera;
 
+	//Gameworld Objects
+	MapLayer objectLayer;
+	Vector2 endMapLocation;
+
 	//Player
 	Player player;
 
@@ -76,6 +80,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		uiBatch = new SpriteBatch();
 		player = new Player();
 		gameMap = new TiledGameMap();
+
+		//Object Layer
+		objectLayer = gameMap.tiledMap.getLayers().get("Objects");
+		RectangleMapObject endMapRectangle = (RectangleMapObject) objectLayer.getObjects().get("End");
+		endMapLocation = new Vector2(endMapRectangle.getRectangle().getX(), endMapRectangle.getRectangle().getY());
 
 		//UI Textures
 		buttonSquareTexture = new Texture("GUI/buttonSquare_blue.png");
@@ -169,6 +178,12 @@ public class MyGdxGame extends ApplicationAdapter {
 					moveY += 1;
 				}
 
+				//If player gets to end of map
+				if(player.playerSprite.getX() >= endMapLocation.x) {
+					player.playerSprite.setCenter(player.playerSprite.getX() + (player.playerSprite.getWidth()/2) - 1920, player.playerSprite.getY() + player.playerSprite.getHeight()/2);
+					camera.position.x -= 1920;
+				}
+
 				//Collision layer build
 				MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
 				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
@@ -187,13 +202,11 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		player.dt = 0.0f;
 
-		MapLayer objectLayer = gameMap.tiledMap.getLayers().get("Objects");
-
 		//Set player and camera starting location
 		RectangleMapObject playerObject = (RectangleMapObject) objectLayer.getObjects().get("Player");
 		player.playerSprite.setCenter(playerObject.getRectangle().x, (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
-		camera.position.x = player.playerSprite.getX();
-		camera.position.y = player.playerSprite.getY() * 4.75f; //TODO Optamise camera height when seting up world
+		camera.position.x = player.playerSprite.getX() + player.playerSprite.getWidth()/2;
+		camera.position.y = player.playerSprite.getY() * 9.0f; //TODO Optamise camera height when seting up world
 		camera.update();
 
 		restartActive = false;
