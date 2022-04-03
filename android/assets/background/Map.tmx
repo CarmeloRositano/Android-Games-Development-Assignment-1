@@ -187,7 +187,7 @@
 </data>
  </layer>
  <objectgroup id="7" name="Objects">
-  <object id="1" name="Player" x="896.997" y="822.333" width="157.333" height="127.667"/>
+  <object id="1" name="Player" x="898.33" y="819.333" width="91.9997" height="77"/>
   <object id="5" name="End" x="4737.52" y="832.045" width="157.333" height="127.667"/>
  </objectgroup>
 </map>

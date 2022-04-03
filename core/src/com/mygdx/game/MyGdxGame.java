@@ -177,7 +177,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 				//TODO Determine Character Movement Distance
 				player.movePlayer(moveX, moveY, tileLayer);
-				camera.translate(player.getMovementSpeed() * player.dt, 0f);
+				camera.translate(player.getConstantSpeed() * player.dt, 0f);
 				camera.update();
 
 //				//TODO Check movement against grid

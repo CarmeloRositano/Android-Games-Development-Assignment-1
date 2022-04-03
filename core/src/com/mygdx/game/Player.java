@@ -17,9 +17,11 @@ public class Player {
 
     public enum PlayerState { RUNNING, JUMPING, DYING, DEAD, SHOOTING }
 
-    private static final float MOVEMENT_SPEED = 100.0f;
-
+    private static final float MOVEMENT_SPEED = 200.0f;
+    private static final float CONSTANT_SPEED = 100.0f;
     private static final float GRAVITY = 98f;
+
+    boolean canJump;
 
     PlayerState currentPlayerState;
 
@@ -60,6 +62,7 @@ public class Player {
 
         updateCurrentPlayerState();
 
+        canJump = false;
 
         dt = 0.0f;
     }
@@ -67,7 +70,9 @@ public class Player {
     //Updates the currentPlayerState to determine what animation that player sprite should be in
     public void updateCurrentPlayerState() {
 
+
         dt += Gdx.graphics.getDeltaTime();
+
 
         switch (currentPlayerState) {
             case RUNNING:
@@ -94,14 +99,23 @@ public class Player {
 
     //Moves the player
     public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer) {
-        this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + MOVEMENT_SPEED * dt);
+        this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
+
         if(collidesBottom(collisionLayer)) {
-            this.playerDelta.y = ((y * MOVEMENT_SPEED * dt));
+            if(y == 1) {
+                this.playerDelta.y = (playerSprite.getY() - this.playerDelta.y * dt) / 2;
+            } else {
+                this.playerDelta.y = ((y * MOVEMENT_SPEED * dt));
+            }
         } else {
-            this.playerDelta.y = ((y * MOVEMENT_SPEED * dt) - GRAVITY * dt);
-            System.out.println("GRAVITY!!!!!!!!!!");
+            this.playerDelta.y = (this.playerDelta.y - GRAVITY * dt);
         }
+
         playerSprite.translate(this.playerDelta.x, this.playerDelta.y);
+        if (playerSprite.getY() < 61) {
+            playerSprite.setPosition(playerSprite.getX(), 61);
+            //TODO Fix issue where player character would fall into ground after jump. Now has hard coded possition (61)
+        }
     }
 
     private boolean isCellBlocked(float x, float y, TiledMapTileLayer collisionLayer) {
@@ -116,10 +130,6 @@ public class Player {
             if(isCellBlocked(playerSprite.getX() + step, playerSprite.getY(), collisionLayer)) {
                 return true;
             }
-//            if (collides = isCellBlocked(playerSprite.getX() + step, playerSprite.getY(), collisionLayer)) {
-//                break;
-//            }
-//            return collides;
         }
         return false;
     }
@@ -140,8 +150,8 @@ public class Player {
         this.playerWalkingAnimation = playerWalkingAnimation;
     }
 
-    public static float getMovementSpeed() {
-        return MOVEMENT_SPEED;
+    public static float getConstantSpeed() {
+        return CONSTANT_SPEED;
     }
 
     public Vector2 getPlayerDelta() {
