@@ -186,7 +186,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				}
 				if (Gdx.input.isKeyPressed(Input.Keys.SPACE) || shootButton.isDown) {
 					shootButton.isDown = true;
-					isShoot = true;
+					player.shoot();
 				}
 
 				//If player gets to end of map

@@ -2,16 +2,12 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 
 import org.w3c.dom.Text;
 
@@ -23,6 +19,7 @@ public class Player {
     private static float CONSTANT_SPEED = 150.0f;
     private static final float GRAVITY = 70f;
 
+    boolean isShooting;
     boolean canJump;
     boolean playerAlive;
 
@@ -34,13 +31,19 @@ public class Player {
     Vector2 playerDelta;
     Rectangle playerDeltaRectangle;
 
+    //Player - Walking
     Texture playerWalkingTexture;
     private TextureRegion[] playerWalkingFrames;
     private Animation playerWalkingAnimation;
-
+    //Dying
     Texture playerDyingTexture;
-    private TextureRegion[] playerdyingFrames;
+    private TextureRegion[] playerDyingFrames;
     private Animation playerDyingAnimation;
+    //Shooting
+    Texture playerShootingTexture;
+    Texture playerBullet;
+    private TextureRegion[] playerShootingFrames;
+    private Animation playerShootingAnimation;
 
     //Game Clock
     float dt;
@@ -54,38 +57,58 @@ public class Player {
         playerDelta = new Vector2();
         playerDeltaRectangle = new Rectangle(playerSprite.getX(), playerSprite.getY(), playerSprite.getWidth(), playerSprite.getHeight());
 
-        //Player Walking Texture Build
-        int walkingFrameCol = 3;
-        int WalkingFrameRow = 6;
+        //Player Walking Texture and Animation Build
+        int FrameCol = 3;
+        int FrameRow = 6;
         playerWalkingTexture = new Texture("player/moving.png");
-        TextureRegion[][] walkTemp = TextureRegion.split(playerWalkingTexture, playerWalkingTexture.getWidth() / walkingFrameCol, playerWalkingTexture.getHeight() / WalkingFrameRow);
-        playerWalkingFrames = new TextureRegion[walkingFrameCol * WalkingFrameRow];
+        TextureRegion[][] walkTemp = TextureRegion.split(playerWalkingTexture, playerWalkingTexture.getWidth() / FrameCol,
+                playerWalkingTexture.getHeight() / FrameRow);
+        playerWalkingFrames = new TextureRegion[FrameCol * FrameRow];
         int index = 0;
-        for (int i = 0; i < WalkingFrameRow; i++) {
-            for (int j = 0; j < walkingFrameCol; j++) {
+        for (int i = 0; i < FrameRow; i++) {
+            for (int j = 0; j < FrameCol; j++) {
                 playerWalkingFrames[index++] = walkTemp[i][j];
             }
         }
         playerWalkingAnimation = new Animation(1f/30f, playerWalkingFrames);
 
-        //Player dying texture build
-        int dyingFrameCol = 5;
-        int dyingFrameRow = 4;
+        //Player Dying Texture and Animation Build
+        FrameCol = 5;
+        FrameRow = 4;
         playerDyingTexture = new Texture("player/dying.png");
-        TextureRegion[][] dyingTemp = TextureRegion.split(playerDyingTexture, playerDyingTexture.getWidth() / dyingFrameCol, playerDyingTexture.getHeight() / dyingFrameRow);
-        playerdyingFrames = new TextureRegion[(dyingFrameCol * dyingFrameRow) - 2];
+        TextureRegion[][] dyingTemp = TextureRegion.split(playerDyingTexture, playerDyingTexture.getWidth() / FrameCol,
+                playerDyingTexture.getHeight() / FrameRow);
+        playerDyingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
         index = 0;
-        for (int i = 0; i < dyingFrameRow; i++) {
-            for (int j = 0; j < dyingFrameCol; j++) {
+        for (int i = 0; i < FrameRow; i++) {
+            for (int j = 0; j < FrameCol; j++) {
                 if(index < 18) {
-                    playerdyingFrames[index++] = dyingTemp[i][j];
+                    playerDyingFrames[index++] = dyingTemp[i][j];
                 }
             }
         }
-        playerDyingAnimation = new Animation(0.033f, playerdyingFrames);
+        playerDyingAnimation = new Animation(1f/30f, playerDyingFrames);
+
+        //player shooting Texture and Animation Build
+        FrameCol = 3;
+        FrameRow = 4;
+        playerShootingTexture = new Texture("player/shooting.png");
+        TextureRegion[][] shootingTemp = TextureRegion.split(playerShootingTexture, playerShootingTexture.getWidth() / FrameCol,
+                playerShootingTexture.getHeight() / FrameRow);
+        playerShootingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
+        index = 0;
+        for (int i = 0; i < FrameRow; i++) {
+            for (int j = 0; j < FrameCol; j++) {
+                if(index < 10) {
+                    playerShootingFrames[index++] = shootingTemp[i][j];
+                }
+            }
+        }
+        playerShootingAnimation = new Animation (1f/30f, playerShootingFrames);
 
         updateCurrentPlayerState();
 
+        isShooting = false;
         canJump = false;
         playerAlive = true;
         dt = 0.0f;
@@ -101,6 +124,7 @@ public class Player {
         switch (currentPlayerState) {
             case RUNNING:
                 currentFrame = (TextureRegion) playerWalkingAnimation.getKeyFrame(stateTime, true);
+                playerSprite.setRegion(currentFrame);
                 break;
 
             case DYING:
@@ -116,7 +140,12 @@ public class Player {
                 break;
 
             case SHOOTING:
-
+                currentFrame = (TextureRegion) playerShootingAnimation.getKeyFrame(stateTime, true);
+                playerSprite.setRegion(currentFrame);
+                if(playerShootingAnimation.isAnimationFinished(stateTime)) {
+                    currentPlayerState = PlayerState.RUNNING;
+                    isShooting = false;
+                };
                 break;
 
         }
@@ -139,6 +168,7 @@ public class Player {
         if(collidesBottom(collisionLayer)) {
             if(y == 1 && currentPlayerState != PlayerState.DEAD && currentPlayerState != PlayerState.DYING) {
                 //Mario Style arc jump
+                stateTime = 0f;
                 this.playerDelta.y = (playerSprite.getY() - this.playerDelta.y * dt) / 2;
             } else {
                 this.playerDelta.y = ((y * MOVEMENT_SPEED * dt));
@@ -167,6 +197,13 @@ public class Player {
             }
         }
         return false;
+    }
+
+    public void shoot() {
+        if(isShooting) return;
+        stateTime = 0f;
+        currentPlayerState = PlayerState.SHOOTING;
+        isShooting = true;
     }
 
     //Getters and Setters
