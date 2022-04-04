@@ -19,7 +19,7 @@ public class Player {
 
     private static final float MOVEMENT_SPEED = 200.0f;
     private static final float CONSTANT_SPEED = 150.0f;
-    private static final float GRAVITY = 98f;
+    private static final float GRAVITY = 70f;
 
     boolean canJump;
 
@@ -95,10 +95,20 @@ public class Player {
 
     //Moves the player
     public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer) {
-        this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
+
+        //Determine player position in view port
+        playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
+
+        //Make player not move out of bounds
+        if(playerDeltaRectangle.x < -570 || playerDeltaRectangle.x > 570) {
+            this.playerDelta.x = (CONSTANT_SPEED * dt);
+        } else {
+            this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
+        }
 
         if(collidesBottom(collisionLayer)) {
             if(y == 1) {
+                //Mario Style arc jump
                 this.playerDelta.y = (playerSprite.getY() - this.playerDelta.y * dt) / 2;
             } else {
                 this.playerDelta.y = ((y * MOVEMENT_SPEED * dt));
@@ -107,7 +117,15 @@ public class Player {
             this.playerDelta.y = (this.playerDelta.y - GRAVITY * dt);
         }
 
+
+
+        final Rectangle screenBounds = new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        System.out.println(screenBounds);
+        System.out.println(playerDeltaRectangle);
+
         playerSprite.translate(this.playerDelta.x, this.playerDelta.y);
+
         if (playerSprite.getY() < 61) {
             playerSprite.setPosition(playerSprite.getX(), 61);
             //TODO Fix issue where player character would fall into ground after jump. Now has hard coded possition (61)

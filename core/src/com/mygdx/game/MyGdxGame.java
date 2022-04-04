@@ -184,6 +184,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					camera.position.x -= 1920;
 				}
 
+
 				//Collision layer build
 				MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
 				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
