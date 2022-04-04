@@ -13,15 +13,18 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 
+import org.w3c.dom.Text;
+
 public class Player {
 
     public enum PlayerState { RUNNING, DYING, DEAD, SHOOTING }
 
-    private static final float MOVEMENT_SPEED = 200.0f;
-    private static final float CONSTANT_SPEED = 150.0f;
+    private static float MOVEMENT_SPEED = 200.0f;
+    private static float CONSTANT_SPEED = 150.0f;
     private static final float GRAVITY = 70f;
 
     boolean canJump;
+    boolean playerAlive;
 
     PlayerState currentPlayerState;
 
@@ -30,13 +33,18 @@ public class Player {
     Texture playerTexture;
     Vector2 playerDelta;
     Rectangle playerDeltaRectangle;
+
     Texture playerWalkingTexture;
     private TextureRegion[] playerWalkingFrames;
-
     private Animation playerWalkingAnimation;
+
+    Texture playerDyingTexture;
+    private TextureRegion[] playerdyingFrames;
+    private Animation playerDyingAnimation;
 
     //Game Clock
     float dt;
+    float stateTime;
     private TextureRegion currentFrame;
 
     public Player() {
@@ -49,7 +57,7 @@ public class Player {
         //Player Walking Texture Build
         int walkingFrameCol = 3;
         int WalkingFrameRow = 6;
-        playerWalkingTexture = new Texture(Gdx.files.internal("player/moving.png"));
+        playerWalkingTexture = new Texture("player/moving.png");
         TextureRegion[][] walkTemp = TextureRegion.split(playerWalkingTexture, playerWalkingTexture.getWidth() / walkingFrameCol, playerWalkingTexture.getHeight() / WalkingFrameRow);
         playerWalkingFrames = new TextureRegion[walkingFrameCol * WalkingFrameRow];
         int index = 0;
@@ -58,32 +66,53 @@ public class Player {
                 playerWalkingFrames[index++] = walkTemp[i][j];
             }
         }
-        playerWalkingAnimation = new Animation(0.033f, playerWalkingFrames);
+        playerWalkingAnimation = new Animation(1f/30f, playerWalkingFrames);
+
+        //Player dying texture build
+        int dyingFrameCol = 5;
+        int dyingFrameRow = 4;
+        playerDyingTexture = new Texture("player/dying.png");
+        TextureRegion[][] dyingTemp = TextureRegion.split(playerDyingTexture, playerDyingTexture.getWidth() / dyingFrameCol, playerDyingTexture.getHeight() / dyingFrameRow);
+        playerdyingFrames = new TextureRegion[(dyingFrameCol * dyingFrameRow) - 2];
+        index = 0;
+        for (int i = 0; i < dyingFrameRow; i++) {
+            for (int j = 0; j < dyingFrameCol; j++) {
+                if(index < 18) {
+                    playerdyingFrames[index++] = dyingTemp[i][j];
+                }
+            }
+        }
+        playerDyingAnimation = new Animation(0.033f, playerdyingFrames);
 
         updateCurrentPlayerState();
 
         canJump = false;
-
+        playerAlive = true;
         dt = 0.0f;
+        stateTime = 0.0f;
     }
 
     //Updates the currentPlayerState to determine what animation that player sprite should be in
     public void updateCurrentPlayerState() {
 
-
-        dt += Gdx.graphics.getDeltaTime();
+        stateTime += Gdx.graphics.getDeltaTime();
 
 
         switch (currentPlayerState) {
             case RUNNING:
-                currentFrame = (TextureRegion) playerWalkingAnimation.getKeyFrame(dt, true);
-                playerSprite.setRegion(currentFrame);
-
+                currentFrame = (TextureRegion) playerWalkingAnimation.getKeyFrame(stateTime, true);
                 break;
 
             case DYING:
-                //TODO If dying animation.isFinished()
-                //currentPlayerState = PlayerState.DEAD;
+                currentFrame = (TextureRegion) playerDyingAnimation.getKeyFrame(stateTime, false);
+                playerSprite.setRegion(currentFrame);
+                if(playerDyingAnimation.isAnimationFinished(stateTime)) {
+                    currentPlayerState = PlayerState.DEAD;
+                }
+                break;
+
+            case DEAD:
+                MOVEMENT_SPEED = CONSTANT_SPEED = 0;
                 break;
 
             case SHOOTING:
@@ -91,6 +120,7 @@ public class Player {
                 break;
 
         }
+        playerSprite.setRegion(currentFrame);
     }
 
     //Moves the player
@@ -100,14 +130,14 @@ public class Player {
         playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
 
         //Make player not move out of bounds
-        if(playerDeltaRectangle.x < -570 || playerDeltaRectangle.x > 570) {
+        if(playerDeltaRectangle.x <= -(Gdx.graphics.getWidth() / 2) || playerDeltaRectangle.x >= Gdx.graphics.getWidth() / 2) {
             this.playerDelta.x = (CONSTANT_SPEED * dt);
         } else {
             this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
         }
 
         if(collidesBottom(collisionLayer)) {
-            if(y == 1) {
+            if(y == 1 && currentPlayerState != PlayerState.DEAD && currentPlayerState != PlayerState.DYING) {
                 //Mario Style arc jump
                 this.playerDelta.y = (playerSprite.getY() - this.playerDelta.y * dt) / 2;
             } else {
@@ -116,13 +146,6 @@ public class Player {
         } else {
             this.playerDelta.y = (this.playerDelta.y - GRAVITY * dt);
         }
-
-
-
-        final Rectangle screenBounds = new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        System.out.println(screenBounds);
-        System.out.println(playerDeltaRectangle);
 
         playerSprite.translate(this.playerDelta.x, this.playerDelta.y);
 
@@ -138,8 +161,6 @@ public class Player {
     }
 
     public boolean collidesBottom(TiledMapTileLayer collisionLayer) {
-        boolean collides = false;
-
         for(float step = 0; step < playerSprite.getWidth(); step += collisionLayer.getTileWidth() / 2) {
             if(isCellBlocked(playerSprite.getX() + step, playerSprite.getY(), collisionLayer)) {
                 return true;

@@ -59,6 +59,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	Button moveLeftButton;
 	Button moveRightButton;
 	Button moveUpButton;
+	Button shootButton;
 	Button restartButton;
 
 	//Just use this to only restart when the restart button is released instead of immediately as it's pressed
@@ -93,11 +94,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		buttonLongDownTexture = new Texture("GUI/buttonLong_beige_pressed.png");
 
 		//Buttons
-		float buttonSize = h * 0.2f;
-		moveLeftButton = new Button(0.0f, 0.0f, buttonSize, buttonSize, buttonSquareTexture, buttonSquareDownTexture);
-		moveRightButton = new Button(buttonSize + buttonSize / 5, 0.0f, buttonSize, buttonSize, buttonSquareTexture, buttonSquareDownTexture);
-		moveUpButton = new Button(buttonSize / 2 + buttonSize / 10, buttonSize + buttonSize / 10, buttonSize, buttonSize, buttonSquareTexture, buttonSquareDownTexture);
-		restartButton = new Button(w/2 - buttonSize*2, h * 0.2f, buttonSize*4, buttonSize, buttonLongTexture, buttonLongDownTexture);
+		float buttonSize = h * 0.5f;
+		moveLeftButton = new Button(0.0f, 0.0f, w * 0.2f, h * 0.5f, buttonSquareTexture, buttonSquareDownTexture);
+		moveRightButton = new Button(w * 0.2f , 0.0f, w * 0.2f, h * 0.5f, buttonSquareTexture, buttonSquareDownTexture);
+		moveUpButton = new Button(0.0f, h * 0.5f, w * 0.4f, h * 0.5f, buttonSquareTexture, buttonSquareDownTexture);
+		shootButton = new Button(w * 0.6f, 0.0f, w * 0.4f, h * 1, buttonSquareTexture, buttonSquareDownTexture);
+		restartButton = new Button(w/2 - buttonSize*2, h * 0.2f, buttonSize * 4, buttonSize, buttonLongTexture, buttonLongDownTexture);
 
 		//Collision
 		tileRectangle = new Rectangle();
@@ -118,6 +120,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		//Clear the screen every frame before drawing.
 		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		gameMap.render(camera);
@@ -139,6 +142,8 @@ public class MyGdxGame extends ApplicationAdapter {
 				moveLeftButton.draw(uiBatch);
 				moveRightButton.draw(uiBatch);
 				moveUpButton.draw(uiBatch);
+				shootButton.draw(uiBatch);
+				uiBatch.setColor(1, 1, 1, 0.3f);
 				break;
 			case COMPLETE:
 				restartButton.draw(uiBatch);
@@ -162,20 +167,26 @@ public class MyGdxGame extends ApplicationAdapter {
 				moveLeftButton.update(checkTouch, touchX, touchY);
 				moveRightButton.update(checkTouch, touchX, touchY);
 				moveUpButton.update(checkTouch, touchX, touchY);
+				shootButton.update(checkTouch, touchX, touchY);
 
 				int moveX = 0;
 				int moveY = 0;
-				if (Gdx.input.isKeyPressed(Input.Keys.DPAD_LEFT) || moveLeftButton.isDown) {
+				boolean isShoot = false;
+				if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || moveLeftButton.isDown) {
 					moveLeftButton.isDown = true;
 					moveX -= 1;
 				}
-				if (Gdx.input.isKeyPressed(Input.Keys.DPAD_RIGHT) || moveRightButton.isDown) {
+				if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || moveRightButton.isDown) {
 					moveRightButton.isDown = true;
 					moveX += 1;
 				}
-				if (Gdx.input.isKeyPressed(Input.Keys.DPAD_UP) || moveUpButton.isDown) {
+				if (Gdx.input.isKeyPressed(Input.Keys.UP) || moveUpButton.isDown) {
 					moveUpButton.isDown = true;
 					moveY += 1;
+				}
+				if (Gdx.input.isKeyPressed(Input.Keys.SPACE) || shootButton.isDown) {
+					shootButton.isDown = true;
+					isShoot = true;
 				}
 
 				//If player gets to end of map
@@ -207,7 +218,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		RectangleMapObject playerObject = (RectangleMapObject) objectLayer.getObjects().get("Player");
 		player.playerSprite.setCenter(playerObject.getRectangle().x, (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
 		camera.position.x = player.playerSprite.getX() + player.playerSprite.getWidth()/2;
-		camera.position.y = player.playerSprite.getY() * 9.0f; //TODO Optamise camera height when seting up world
+		camera.position.y = player.playerSprite.getY() * 9.0f; //TODO optimize camera height when setting up world
 		camera.update();
 
 		restartActive = false;

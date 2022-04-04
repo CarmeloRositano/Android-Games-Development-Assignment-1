@@ -29,6 +29,7 @@ public class Button {
     public void update(boolean checkTouch, int touchX, int touchY) {
         isDown = false;
 
+
         if (checkTouch) {
             int h2 = Gdx.graphics.getHeight();
             //Touch coordinates have origin in top-left instead of bottom left
@@ -46,9 +47,5 @@ public class Button {
         } else {
             batch.draw(textureDown, x, y, w, h);
         }
-    }
-
-    public boolean justPressed() {
-        return isDown && !isDownPrev;
     }
 }
