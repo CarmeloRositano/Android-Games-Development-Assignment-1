@@ -48,4 +48,8 @@ public class Button {
             batch.draw(textureDown, x, y, w, h);
         }
     }
+
+    public void dispose() {
+
+    }
 }

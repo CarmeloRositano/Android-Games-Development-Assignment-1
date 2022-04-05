@@ -19,7 +19,11 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.swing.GrayFilter;
 
@@ -42,6 +46,10 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	//Player
 	Player player;
+
+	//Bullet
+//	PlayerProjectile bullet;
+	ArrayList<PlayerProjectile> bullets;
 
 	//Background Textures
 	Texture backgroundGround;
@@ -68,7 +76,6 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void create () {
 
-
 		//Camera
 		float w = Gdx.graphics.getWidth();
 		float h = Gdx.graphics.getHeight();
@@ -77,9 +84,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		camera.update();
 
 		//Rendering
+		bullets = new ArrayList<PlayerProjectile>();
 		batch = new SpriteBatch();
 		uiBatch = new SpriteBatch();
-		player = new Player();
+		player = new Player(bullets);
 		gameMap = new TiledGameMap();
 
 		//Object Layer
@@ -134,6 +142,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		player.playerSprite.draw(batch);
 		batch.end();
 
+		//Render Bullets
+		for(int i = 0; i < bullets.size(); i++) {
+			bullets.get(i).draw(batch);
+		}
+
 		//Draw UI
 		uiBatch.begin();
 		switch(gameState) {
@@ -163,6 +176,20 @@ public class MyGdxGame extends ApplicationAdapter {
 		switch(gameState) {
 
 			case PLAYING:
+
+				//Collision layer build
+				MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
+				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
+
+				//Update Player Bullets
+				for (int i = 0; i < bullets.size(); i++) {
+					bullets.get(i).projectileMovement(player.dt);
+					if(bullets.get(i).shouldRemove()) {
+						bullets.remove(i);
+						i--;
+					}
+				}
+
 				//Poll user for input
 				moveLeftButton.update(checkTouch, touchX, touchY);
 				moveRightButton.update(checkTouch, touchX, touchY);
@@ -185,6 +212,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					moveY += 1;
 				}
 				if (Gdx.input.isKeyPressed(Input.Keys.SPACE) || shootButton.isDown) {
+					player.shoot();
 					shootButton.isDown = true;
 					player.shoot();
 				}
@@ -196,9 +224,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				}
 
 
-				//Collision layer build
-				MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
-				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
+
 
 				//Character and Camera Movement
 				player.movePlayer(moveX, moveY, tileLayer);

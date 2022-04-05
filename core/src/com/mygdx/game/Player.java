@@ -4,12 +4,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 import org.w3c.dom.Text;
+
+import java.util.ArrayList;
 
 public class Player {
 
@@ -19,13 +22,14 @@ public class Player {
     private static float CONSTANT_SPEED = 150.0f;
     private static final float GRAVITY = 70f;
 
+
     boolean isShooting;
     boolean canJump;
     boolean playerAlive;
 
     PlayerState currentPlayerState;
 
-    Sprite playerSprite = new Sprite();
+    Sprite playerSprite;
 
     Texture playerTexture;
     Vector2 playerDelta;
@@ -41,8 +45,10 @@ public class Player {
     private Animation playerDyingAnimation;
     //Shooting
     Texture playerShootingTexture;
-    Texture playerBullet;
+    ArrayList<PlayerProjectile> bullets;
+
     private TextureRegion[] playerShootingFrames;
+
     private Animation playerShootingAnimation;
 
     //Game Clock
@@ -50,9 +56,13 @@ public class Player {
     float stateTime;
     private TextureRegion currentFrame;
 
-    public Player() {
+
+    public Player(ArrayList<PlayerProjectile> bullets) {
         currentPlayerState = PlayerState.RUNNING;
 
+        this.bullets = bullets;
+
+        playerSprite = new Sprite();
         playerSprite.setSize(256,256);
         playerDelta = new Vector2();
         playerDeltaRectangle = new Rectangle(playerSprite.getX(), playerSprite.getY(), playerSprite.getWidth(), playerSprite.getHeight());
@@ -116,10 +126,10 @@ public class Player {
     }
 
     //Updates the currentPlayerState to determine what animation that player sprite should be in
+
     public void updateCurrentPlayerState() {
 
         stateTime += Gdx.graphics.getDeltaTime();
-
 
         switch (currentPlayerState) {
             case RUNNING:
@@ -151,70 +161,62 @@ public class Player {
         }
         playerSprite.setRegion(currentFrame);
     }
-
     //Moves the player
+
     public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer) {
-
-
-        if (playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2) + playerSprite.getWidth())
-                || playerDeltaRectangle.x >= (Gdx.graphics.getWidth() / 2) + playerSprite.getWidth() / 1.5) {
+        //If player is within viewport
+        if (playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2f) + playerSprite.getWidth())
+                || playerDeltaRectangle.x >= (Gdx.graphics.getWidth() / 2f) + playerSprite.getWidth() / 1.5) {
+            //If the player is moving left or right
             if( x == 1 || x == -1 ) {
                 this.playerDelta.x = (CONSTANT_SPEED * dt);
             } else {
-                if (playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2) + playerSprite.getWidth())) {
-                    System.out.println("Player Left Side of viewport");
+                //If the player is all the way to the left of viewport
+                if (playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2f) + playerSprite.getWidth())) {
                     this.playerDelta.x = (CONSTANT_SPEED * dt) + (CONSTANT_SPEED * 0.01f);
                     playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt) + (CONSTANT_SPEED * 0.01f);
+
+                //If the player is all the way to the right of viewport
                 } else {
-                    System.out.println("Player right side of viewport");
                     this.playerDelta.x = (CONSTANT_SPEED * dt) - (CONSTANT_SPEED * 0.01f);
                     playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt) - (CONSTANT_SPEED * 0.01f);
                 }
             }
+        //The player is not at any edge of the viewport
         } else {
-            System.out.println("player centre of viewport");
             this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
             playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
         }
-//        //Determine player position in view port
-//        playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
-//
-//        //Make player not move out of bounds
-//        if(playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2) + playerSprite.getWidth())
-//                || playerDeltaRectangle.x >= (Gdx.graphics.getWidth() / 2) + playerSprite.getWidth()) {
-//            this.playerDelta.x = (CONSTANT_SPEED * dt);
-//            return;
-//        } else {
-//            this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
-//        }
 
         if(collidesBottom(collisionLayer)) {
+            //Player jump
             if(y == 1 && currentPlayerState != PlayerState.DEAD && currentPlayerState != PlayerState.DYING) {
                 //Mario Style arc jump
                 stateTime = 0f;
                 this.playerDelta.y = (playerSprite.getY() - this.playerDelta.y * dt) / 2;
             } else {
-                this.playerDelta.y = ((y * MOVEMENT_SPEED * dt));
+                this.playerDelta.y = y * MOVEMENT_SPEED * dt;
             }
+        //Player is in the air (Applies gravity)
         } else {
             this.playerDelta.y = (this.playerDelta.y - GRAVITY * dt);
         }
 
         playerSprite.translate(this.playerDelta.x, this.playerDelta.y);
 
+        //Make sure player does not fall into ground
         if (playerSprite.getY() < 61) {
             playerSprite.setPosition(playerSprite.getX(), 61);
             //TODO Fix issue where player character would fall into ground after jump. Now has hard coded possition (61)
         }
     }
-
     private boolean isCellBlocked(float x, float y, TiledMapTileLayer collisionLayer) {
         TiledMapTileLayer.Cell cell = collisionLayer.getCell((int) (x / collisionLayer.getTileWidth()), (int) (y / collisionLayer.getTileHeight()));
         return cell != null && cell.getTile() != null;
     }
 
     public boolean collidesBottom(TiledMapTileLayer collisionLayer) {
-        for(float step = 0; step < playerSprite.getWidth(); step += collisionLayer.getTileWidth() / 2) {
+        for(float step = 0; step < playerSprite.getWidth(); step += collisionLayer.getTileWidth() / 2f) {
             if(isCellBlocked(playerSprite.getX() + step, playerSprite.getY(), collisionLayer)) {
                 return true;
             }
@@ -224,45 +226,17 @@ public class Player {
 
     public void shoot() {
         if(isShooting) return;
+        if(bullets.size() == 4) return;
+        bullets.add(new PlayerProjectile(playerSprite.getX() + playerSprite.getWidth() * 0.8f, (playerSprite.getY()) + (playerSprite.getHeight() * 0.42f)));
         stateTime = 0f;
         currentPlayerState = PlayerState.SHOOTING;
         isShooting = true;
     }
 
+
     //Getters and Setters
-
-    public PlayerState getCurrentPlayerState() { return currentPlayerState; }
-    public TextureRegion getCurrentFrame() { return currentFrame; }
-
-    public void setCurrentFrame(TextureRegion currentFrame) {
-        this.currentFrame = currentFrame;
-    }
-    public Animation getPlayerWalkingAnimation() {
-        return playerWalkingAnimation;
-    }
-
-    public void setPlayerWalkingAnimation(Animation playerWalkingAnimation) {
-        this.playerWalkingAnimation = playerWalkingAnimation;
-    }
-
     public static float getConstantSpeed() {
         return CONSTANT_SPEED;
-    }
-
-    public Vector2 getPlayerDelta() {
-        return playerDelta;
-    }
-
-    public void setPlayerDeltaX(float playerDeltaX) {
-        this.playerDelta.x = playerDeltaX;
-    }
-
-    public void setPlayerDeltaY(float playerDeltaY) {
-        this.playerDelta.y = playerDeltaY;
-    }
-
-    public static float getGRAVITY() {
-        return GRAVITY;
     }
 
 }
