@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -126,7 +127,6 @@ public class Player {
     }
 
     //Updates the currentPlayerState to determine what animation that player sprite should be in
-
     public void updateCurrentPlayerState() {
 
         stateTime += Gdx.graphics.getDeltaTime();
@@ -161,30 +161,19 @@ public class Player {
         }
         playerSprite.setRegion(currentFrame);
     }
+
     //Moves the player
+    public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer, Camera camera) {
 
-    public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer) {
         //If player is within viewport
-        if (playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2f) + playerSprite.getWidth())
-                || playerDeltaRectangle.x >= (Gdx.graphics.getWidth() / 2f) + playerSprite.getWidth() / 1.5) {
-            //If the player is moving left or right
-            if( x == 1 || x == -1 ) {
-                this.playerDelta.x = (CONSTANT_SPEED * dt);
-            } else {
-                //If the player is all the way to the left of viewport
-                if (playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2f) + playerSprite.getWidth())) {
-                    this.playerDelta.x = (CONSTANT_SPEED * dt) + (CONSTANT_SPEED * 0.01f);
-                    playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt) + (CONSTANT_SPEED * 0.01f);
-
-                //If the player is all the way to the right of viewport
-                } else {
-                    this.playerDelta.x = (CONSTANT_SPEED * dt) - (CONSTANT_SPEED * 0.01f);
-                    playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt) - (CONSTANT_SPEED * 0.01f);
-                }
-            }
-        //The player is not at any edge of the viewport
+        if (playerSprite.getX() < camera.position.x - camera.viewportWidth * 0.5f) {
+            playerSprite.setPosition(camera.position.x - camera.viewportWidth * 0.5f, playerSprite.getY());
+            playerDelta.x = 0f;
+        } else if (playerSprite.getX() > (camera.position.x + camera.viewportWidth * 0.5f) - playerSprite.getWidth()) {
+            playerSprite.setPosition((camera.position.x + camera.viewportWidth * 0.5f) - playerSprite.getWidth(), playerSprite.getY());
+            playerDelta.x = 0f;
         } else {
-            this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
+            this.playerDelta.x = x * MOVEMENT_SPEED * dt;
             playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
         }
 
@@ -202,13 +191,13 @@ public class Player {
             this.playerDelta.y = (this.playerDelta.y - GRAVITY * dt);
         }
 
-        playerSprite.translate(this.playerDelta.x, this.playerDelta.y);
-
         //Make sure player does not fall into ground
         if (playerSprite.getY() < 61) {
             playerSprite.setPosition(playerSprite.getX(), 61);
             //TODO Fix issue where player character would fall into ground after jump. Now has hard coded possition (61)
         }
+
+        playerSprite.translate(this.playerDelta.x, this.playerDelta.y);
     }
     private boolean isCellBlocked(float x, float y, TiledMapTileLayer collisionLayer) {
         TiledMapTileLayer.Cell cell = collisionLayer.getCell((int) (x / collisionLayer.getTileWidth()), (int) (y / collisionLayer.getTileHeight()));

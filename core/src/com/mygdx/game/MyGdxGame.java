@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapLayer;
@@ -92,8 +93,6 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		//Object Layer
 		objectLayer = gameMap.tiledMap.getLayers().get("Objects");
-		RectangleMapObject endMapRectangle = (RectangleMapObject) objectLayer.getObjects().get("End");
-		endMapLocation = new Vector2(endMapRectangle.getRectangle().getX(), endMapRectangle.getRectangle().getY());
 
 		//UI Textures
 		buttonSquareTexture = new Texture("GUI/buttonSquare_blue.png");
@@ -217,18 +216,8 @@ public class MyGdxGame extends ApplicationAdapter {
 					player.shoot();
 				}
 
-				//If player gets to end of map
-				if(player.playerSprite.getX() >= endMapLocation.x) {
-					player.playerSprite.setCenter(player.playerSprite.getX() + (player.playerSprite.getWidth()/2) - 1920, player.playerSprite.getY() + player.playerSprite.getHeight()/2);
-					camera.position.x -= 1920;
-				}
-
-
-
-
 				//Character and Camera Movement
-				player.movePlayer(moveX, moveY, tileLayer);
-				camera.translate(player.getConstantSpeed() * player.dt, 0f);
+				player.movePlayer(moveX, moveY, tileLayer, camera);
 				camera.update();
 
 		}
@@ -244,7 +233,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		RectangleMapObject playerObject = (RectangleMapObject) objectLayer.getObjects().get("Player");
 		player.playerSprite.setCenter(playerObject.getRectangle().x, (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
 		camera.position.x = player.playerSprite.getX() + player.playerSprite.getWidth()/2;
-		camera.position.y = player.playerSprite.getY() * 9.0f; //TODO optimize camera height when setting up world
+		camera.position.y = player.playerSprite.getY() * 7.92f; //TODO optimize camera height when setting up world
 		camera.update();
 
 		restartActive = false;
