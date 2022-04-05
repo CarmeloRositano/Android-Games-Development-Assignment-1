@@ -155,15 +155,38 @@ public class Player {
     //Moves the player
     public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer) {
 
-        //Determine player position in view port
-        playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
 
-        //Make player not move out of bounds
-        if(playerDeltaRectangle.x <= -(Gdx.graphics.getWidth() / 2) || playerDeltaRectangle.x >= Gdx.graphics.getWidth() / 2) {
-            this.playerDelta.x = (CONSTANT_SPEED * dt);
+        if (playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2) + playerSprite.getWidth())
+                || playerDeltaRectangle.x >= (Gdx.graphics.getWidth() / 2) + playerSprite.getWidth() / 1.5) {
+            if( x == 1 || x == -1 ) {
+                this.playerDelta.x = (CONSTANT_SPEED * dt);
+            } else {
+                if (playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2) + playerSprite.getWidth())) {
+                    System.out.println("Player Left Side of viewport");
+                    this.playerDelta.x = (CONSTANT_SPEED * dt) + (CONSTANT_SPEED * 0.01f);
+                    playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt) + (CONSTANT_SPEED * 0.01f);
+                } else {
+                    System.out.println("Player right side of viewport");
+                    this.playerDelta.x = (CONSTANT_SPEED * dt) - (CONSTANT_SPEED * 0.01f);
+                    playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt) - (CONSTANT_SPEED * 0.01f);
+                }
+            }
         } else {
+            System.out.println("player centre of viewport");
             this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
+            playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
         }
+//        //Determine player position in view port
+//        playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
+//
+//        //Make player not move out of bounds
+//        if(playerDeltaRectangle.x <= -((Gdx.graphics.getWidth() / 2) + playerSprite.getWidth())
+//                || playerDeltaRectangle.x >= (Gdx.graphics.getWidth() / 2) + playerSprite.getWidth()) {
+//            this.playerDelta.x = (CONSTANT_SPEED * dt);
+//            return;
+//        } else {
+//            this.playerDelta.x = ((x * MOVEMENT_SPEED * dt) + CONSTANT_SPEED * dt);
+//        }
 
         if(collidesBottom(collisionLayer)) {
             if(y == 1 && currentPlayerState != PlayerState.DEAD && currentPlayerState != PlayerState.DYING) {
