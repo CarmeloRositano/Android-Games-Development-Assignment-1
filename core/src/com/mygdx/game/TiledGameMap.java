@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -17,6 +18,7 @@ public class TiledGameMap extends Widget {
     float foregroundOneOffset;
     float foregroundTwoOffset;
     float backgroundOffset;
+    float timeElapsed;
 
 
 
@@ -30,12 +32,18 @@ public class TiledGameMap extends Widget {
         foregroundOneOffset = 0f;
         foregroundTwoOffset = 0f;
         backgroundOffset = 0f;
+        timeElapsed = 0f;
     }
 
     public void render (OrthographicCamera camera) {
 
+        //Speed up the player movement over time
+        timeElapsed += Gdx.graphics.getDeltaTime();
+        if(timeElapsed >= 1000f) timeElapsed = 1000f;
+
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
+        //Parallax Effect
         mapLayers.get("Sun").setOffsetX((camera.position.x - camera.viewportWidth) - sunOffset);
         mapLayers.get("Foreground 1").setOffsetX((camera.position.x - camera.viewportWidth) - foregroundOneOffset);
         mapLayers.get("Foreground 2").setOffsetX((camera.position.x - camera.viewportWidth) - foregroundTwoOffset);
@@ -43,13 +51,13 @@ public class TiledGameMap extends Widget {
         mapLayers.get("Background").setOffsetX((camera.position.x - camera.viewportWidth) - backgroundOffset);
 
         //Increment Offset
-        sunOffset+=0.01f;
-        backgroundOffset +=0.1f;
-        foregroundOneOffset+=Player.getConstantSpeed() * 0.01f;
-        foregroundTwoOffset+=Player.getConstantSpeed() * 0.001f;
-        groundOffset+=Player.getConstantSpeed() * 0.05f;
+        sunOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.00001f;
+        backgroundOffset += (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.0001f;
+        foregroundOneOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.01f;
+        foregroundTwoOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.001f;
+        groundOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.05f;
 
-        //Reset Offset
+        //Reset Offset (1920 Width of the section of tile map)
         if (sunOffset >= 1920) sunOffset = 0;
         if (foregroundOneOffset >= 1920) foregroundOneOffset = 0;
         if (foregroundTwoOffset >= 1920) foregroundTwoOffset = 0;
@@ -59,6 +67,7 @@ public class TiledGameMap extends Widget {
 
     public void dispose() {
         tiledMap.dispose();
+        tiledMapRenderer.dispose();
     }
 
 }

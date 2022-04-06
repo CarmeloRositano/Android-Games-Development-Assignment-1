@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class MyGdxGame extends ApplicationAdapter {
 
-	public enum GameState { PLAYING, PAUSED, COMPLETE }
+	public enum GameState { MAIN_MENU, PLAYING, PAUSED, COMPLETE }
 
 	GameState gameState;
 
@@ -27,7 +27,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch uiBatch;
 	OrthographicCamera camera;
 
-	//Gameworld Objects
+	//Game world Objects
 	MapLayer objectLayer;
 	Vector2 endMapLocation;
 
