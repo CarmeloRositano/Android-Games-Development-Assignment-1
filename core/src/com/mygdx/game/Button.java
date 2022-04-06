@@ -2,6 +2,8 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Button {
@@ -16,6 +18,9 @@ public class Button {
     Texture textureUp;
     Texture textureDown;
 
+    //Text
+    BitmapFont font;
+
     public Button(float x, float y, float w, float h, Texture textureUp, Texture textureDown) {
         this.x = x;
         this.y = y;
@@ -24,21 +29,29 @@ public class Button {
 
         this.textureUp = textureUp;
         this.textureDown = textureDown;
+
+        font = new BitmapFont();
     }
 
     public void update(boolean checkTouch, int touchX, int touchY) {
-        isDown = false;
+        isDownPrev = isDown;
 
 
         if (checkTouch) {
             int h2 = Gdx.graphics.getHeight();
-            //Touch coordinates have origin in top-left instead of bottom left
 
-            isDownPrev = isDown;
+
             if (touchX >= x && touchX <= x + w && h2 - touchY >= y && h2 - touchY <= y + h) {
                 isDown = true;
             }
+        } else {
+            isDown = false;
         }
+    }
+
+    public void addText(String text, Batch batch) {
+        font.draw(batch, text, x + (w * 0.35f), y + h / 1.4f);
+        font.getData().setScale(w / 100);
     }
 
     public void draw(SpriteBatch batch) {
@@ -48,6 +61,7 @@ public class Button {
             batch.draw(textureDown, x, y, w, h);
         }
     }
+
 
     public void dispose() {
 

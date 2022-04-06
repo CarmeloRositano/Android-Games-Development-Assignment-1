@@ -20,8 +20,6 @@ public class TiledGameMap extends Widget {
     float backgroundOffset;
     float timeElapsed;
 
-
-
     public TiledGameMap() {
         tiledMap = new TmxMapLoader().load("background/Map.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
@@ -35,11 +33,12 @@ public class TiledGameMap extends Widget {
         timeElapsed = 0f;
     }
 
-    public void render (OrthographicCamera camera) {
+    public void render (OrthographicCamera camera, MyGdxGame.GameState gameState) {
 
         //Speed up the player movement over time
         timeElapsed += Gdx.graphics.getDeltaTime();
         if(timeElapsed >= 1000f) timeElapsed = 1000f;
+        if(gameState == MyGdxGame.GameState.MAIN_MENU) timeElapsed = 0f; //Stop game from speeding up if in menu
 
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();

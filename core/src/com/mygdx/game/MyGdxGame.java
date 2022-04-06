@@ -6,6 +6,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
@@ -13,6 +14,8 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import java.util.ArrayList;
+
+import javax.swing.GrayFilter;
 
 public class MyGdxGame extends ApplicationAdapter {
 
@@ -29,7 +32,6 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	//Game world Objects
 	MapLayer objectLayer;
-	Vector2 endMapLocation;
 
 	//Player
 	Player player;
@@ -55,6 +57,14 @@ public class MyGdxGame extends ApplicationAdapter {
 	Button moveUpButton;
 	Button shootButton;
 	Button restartButton;
+	Button startButton;
+	Button exitButton;
+
+	//Menu
+	float menuDelay;
+
+	//Text
+	BitmapFont font;
 
 	//Just use this to only restart when the restart button is released instead of immediately as it's pressed
 	boolean restartActive;
@@ -66,7 +76,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		float w = Gdx.graphics.getWidth();
 		float h = Gdx.graphics.getHeight();
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, w * 1.75f, h * 1.75f);
+		camera.setToOrtho(false, 1920 * 0.8f, 1080 * 0.8f);
 		camera.update();
 
 		//Rendering
@@ -86,18 +96,24 @@ public class MyGdxGame extends ApplicationAdapter {
 		buttonLongDownTexture = new Texture("GUI/buttonLong_beige_pressed.png");
 
 		//Buttons
-		float buttonSize = h * 0.5f;
 		moveLeftButton = new Button(0.0f, 0.0f, w * 0.2f, h * 0.5f, buttonSquareTexture, buttonSquareDownTexture);
 		moveRightButton = new Button(w * 0.2f , 0.0f, w * 0.2f, h * 0.5f, buttonSquareTexture, buttonSquareDownTexture);
 		moveUpButton = new Button(0.0f, h * 0.5f, w * 0.4f, h * 0.5f, buttonSquareTexture, buttonSquareDownTexture);
 		shootButton = new Button(w * 0.6f, 0.0f, w * 0.4f, h * 1, buttonSquareTexture, buttonSquareDownTexture);
-		restartButton = new Button(w/2 - buttonSize*2, h * 0.2f, buttonSize * 4, buttonSize, buttonLongTexture, buttonLongDownTexture);
+//		restartButton = new Button(w/2 - buttonSize*2, h * 0.2f, buttonSize * 4, buttonSize, buttonLongTexture, buttonLongDownTexture);
+		startButton = new Button(w * 0.05f, h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonSquareDownTexture);
+		exitButton = new Button(w - (w * 0.425f) - (w * 0.05f), h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonSquareDownTexture);
+		menuDelay = 0f;
+
 
 		//Collision
 		tileRectangle = new Rectangle();
 
 		//Map Textures
 		backgroundGround = new Texture("background/background_00.png");
+
+		//Text
+		font = new BitmapFont();
 
 		newGame();
 	}
@@ -115,7 +131,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		gameMap.render(camera);
+		gameMap.render(camera, gameState);
 
 		//Player
 		player.updateCurrentPlayerState();
@@ -134,13 +150,19 @@ public class MyGdxGame extends ApplicationAdapter {
 		//Draw UI
 		uiBatch.begin();
 		switch(gameState) {
-			//if gameState is Running: Draw Controls
+			case MAIN_MENU:
+				uiBatch.setColor(1,1,1,1);
+				startButton.draw(uiBatch);
+				startButton.addText("Start", uiBatch);
+				exitButton.draw(uiBatch);
+				exitButton.addText("Exit", uiBatch);
+				break;
 			case PLAYING:
+				uiBatch.setColor(1, 1, 1, 0.3f);
 				moveLeftButton.draw(uiBatch);
 				moveRightButton.draw(uiBatch);
 				moveUpButton.draw(uiBatch);
 				shootButton.draw(uiBatch);
-				uiBatch.setColor(1, 1, 1, 0.3f);
 				break;
 			case COMPLETE:
 				restartButton.draw(uiBatch);
@@ -158,6 +180,21 @@ public class MyGdxGame extends ApplicationAdapter {
 		int touchY = Gdx.input.getY();
 
 		switch(gameState) {
+
+			case MAIN_MENU:
+				startButton.update(checkTouch, touchX, touchY);
+				exitButton.update(checkTouch, touchX, touchY);
+
+				System.out.println("Is Down: " + startButton.isDown);
+				System.out.println("Is Down Prev: " + startButton.isDownPrev);
+
+				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || startButton.isDownPrev && !startButton.isDown) {
+					gameState = GameState.PLAYING;
+				}
+				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown) {
+					Gdx.app.exit();
+				}
+				break;
 
 			case PLAYING:
 
@@ -210,7 +247,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 
 	public void newGame() {
-		gameState = GameState.PLAYING;
+		gameState = GameState.MAIN_MENU;
 
 		player.dt = 0.0f;
 
@@ -218,7 +255,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		RectangleMapObject playerObject = (RectangleMapObject) objectLayer.getObjects().get("Player");
 		player.playerSprite.setCenter(playerObject.getRectangle().x, (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
 		camera.position.x = player.playerSprite.getX() + player.playerSprite.getWidth()/2;
-		camera.position.y = player.playerSprite.getY() * 7.92f; //TODO optimize camera height when setting up world
+		camera.position.y = (1080 / 2) - 1080 * 0.1f ;
 		camera.update();
 
 		restartActive = false;
@@ -232,5 +269,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		buttonSquareDownTexture.dispose();
 		buttonLongTexture.dispose();
 		buttonLongDownTexture.dispose();
+		backgroundGround.dispose();
 	}
 }
