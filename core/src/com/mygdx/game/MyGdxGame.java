@@ -15,7 +15,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import java.util.ArrayList;
 
-import javax.swing.GrayFilter;
 
 public class MyGdxGame extends ApplicationAdapter {
 
@@ -35,6 +34,10 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	//Player
 	Player player;
+
+	//Enemy
+	GroundEnemy groundEnemy;
+//	PlayerProjectile playerProjectile;
 
 	//Bullet
 	ArrayList<PlayerProjectile> bullets;
@@ -77,6 +80,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		float h = Gdx.graphics.getHeight();
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 1920 * 0.8f, 1080 * 0.8f);
+//		camera.setToOrtho(false, 1920 * 5, 1080 * 5);
 		camera.update();
 
 		//Rendering
@@ -105,6 +109,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		exitButton = new Button(w - (w * 0.425f) - (w * 0.05f), h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonSquareDownTexture);
 		menuDelay = 0f;
 
+		//Enemy
+		groundEnemy = new GroundEnemy(player.playerSprite.getX(), player.playerSprite.getY());
+//		playerProjectile = new PlayerProjectile(player.playerSprite.getX(), player.playerSprite.getY());
 
 		//Collision
 		tileRectangle = new Rectangle();
@@ -136,16 +143,26 @@ public class MyGdxGame extends ApplicationAdapter {
 		//Player
 		player.updateCurrentPlayerState();
 
+		//Enemy
+		groundEnemy.updateCurrentState();
+
 		//Apply camera and draw player
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		player.playerSprite.draw(batch);
 		batch.end();
+//		groundEnemy.groundEnemySprite.setSize(128, 128);
+		groundEnemy.draw(batch);
+//		playerProjectile.bulletSprite.setSize(128, 128);
+//		playerProjectile.draw(batch);
 
 		//Render Bullets
 		for(int i = 0; i < bullets.size(); i++) {
 			bullets.get(i).draw(batch);
 		}
+
+		//Render Enemy
+//		groundEnemy.draw(batch);
 
 		//Draw UI
 		uiBatch.begin();
@@ -202,6 +219,15 @@ public class MyGdxGame extends ApplicationAdapter {
 				MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
 				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
 
+				//Determine when to spawn enemy
+//				if(!groundEnemy.isAlive) {
+//					groundEnemy.setAlive(true);
+//					groundEnemy.groundEnemySprite.setPosition(player.playerSprite.getX() + Gdx.graphics.getWidth() / 2, 61);
+//				}
+				groundEnemy.groundEnemySprite.setPosition(player.playerSprite.getX(), player.playerSprite.getY());
+//				playerProjectile.bulletSprite.setPosition(player.playerSprite.getX(), player.playerSprite.getY());
+
+
 				//Update Player Bullets
 				for (int i = 0; i < bullets.size(); i++) {
 					bullets.get(i).projectileMovement(player.dt);
@@ -210,6 +236,9 @@ public class MyGdxGame extends ApplicationAdapter {
 						i--;
 					}
 				}
+
+				//Update Ground Enemy
+//				groundEnemy.groundEnemyMovement(player.dt);
 
 				//Poll user for input
 				moveLeftButton.update(checkTouch, touchX, touchY);

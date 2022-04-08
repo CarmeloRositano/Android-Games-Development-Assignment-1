@@ -9,6 +9,7 @@ public class PlayerProjectile {
 
     private static final float BULLET_SPEED = 1000f;
 
+    private final Texture bulletTexture = new Texture("player/projectile.png"); //Set here to stop lag from loading texture from drive
     Sprite bulletSprite;
     Vector2 bulletDelta;
     float bulletLifeTime;
@@ -18,7 +19,7 @@ public class PlayerProjectile {
 
     public PlayerProjectile(float x, float y) {
 
-        bulletSprite = new Sprite(new Texture("player/projectile.png"));
+        bulletSprite = new Sprite(bulletTexture);
         bulletSprite.setPosition(x, y);
         bulletDelta = new Vector2();
         bulletLifeTime = 2f;
