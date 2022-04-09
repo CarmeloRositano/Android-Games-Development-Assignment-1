@@ -242,7 +242,6 @@ public class Player {
     public void dispose() {
         playerWalkingTexture.dispose();
         playerDyingTexture.dispose();
-        playerTexture.dispose();
         playerShootingTexture.dispose();
         shapeRenderer.dispose();
     }

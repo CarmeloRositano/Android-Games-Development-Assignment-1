@@ -10,9 +10,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-public class GroundEnemy {
+public class GroundEnemy{
 
-    public enum GroundEnemyState { MOVING, DYING, DEAD;};
+    public enum GroundEnemyState { MOVING, DYING, DEAD }
     private float constantSpeed = 100f;
 
     Sprite groundEnemySprite;
@@ -100,7 +100,6 @@ public class GroundEnemy {
                 constantSpeed = ((Player.getConstantSpeed() + (gameMap.timeElapsed * 1f)) * 0.05f) / Gdx.graphics.getDeltaTime();
                 break;
         }
-        groundEnemySprite.setRegion(currentFrame);
     }
 
     public void groundEnemyMovement(float dt) {

@@ -113,6 +113,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		restartButton = new Button(w * 0.05f, h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonLongDownTexture);
 		startButton = new Button(w * 0.05f, h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonLongDownTexture);
 		exitButton = new Button(w - (w * 0.425f) - (w * 0.05f), h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonLongDownTexture);
+
 		menuDelay = 0f;
 
 		//Collision
@@ -205,10 +206,13 @@ public class MyGdxGame extends ApplicationAdapter {
 				startButton.update(checkTouch, touchX, touchY);
 				exitButton.update(checkTouch, touchX, touchY);
 
-				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || startButton.isDownPrev && !startButton.isDown) {
+				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || startButton.isDownPrev && !startButton.isDown
+					&& gameState == GameState.MAIN_MENU) {
 					gameState = GameState.PLAYING;
+
 				}
-				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown) {
+				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown
+						&& gameState == GameState.MAIN_MENU) {
 					player.dispose();
 					groundEnemy.dispose();
 					for (int i = 0; i < bullets.size(); i++) {
@@ -228,30 +232,18 @@ public class MyGdxGame extends ApplicationAdapter {
 				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
 
 				//Update Ground Enemy
-				float tempMovement;
-				if(player.currentPlayerState == Player.PlayerState.RUNNING) {
-					tempMovement = player.dt;
-					//Determine when to spawn enemy
-					if(groundEnemy.groundEnemySprite.getX() < Gdx.graphics.getWidth() - groundEnemy.groundEnemySprite.getWidth()) {
-						if(player.currentPlayerState == Player.PlayerState.DEAD) {
-							groundEnemy.setDying();
-						}
-						groundEnemy.setAlive();
-						groundEnemy.groundEnemySprite.setPosition((player.playerSprite.getX() + Gdx.graphics.getWidth() + groundEnemy.groundEnemySprite.getWidth()) + rand.nextInt(1000), 61);
-					}
+				//Determine when to spawn enemy
+				if(groundEnemy.groundEnemySprite.getX() < Gdx.graphics.getWidth() - groundEnemy.groundEnemySprite.getWidth()) {
+					//Stop enemy from moving if player is dead and enemy is outside viewport
+					groundEnemy.setAlive();
+					groundEnemy.groundEnemySprite.setPosition((player.playerSprite.getX() + Gdx.graphics.getWidth() + groundEnemy.groundEnemySprite.getWidth()) + rand.nextInt(1000), 61);
 				} else {
-					if(groundEnemy.groundEnemySprite.getX() < Gdx.graphics.getWidth() - groundEnemy.groundEnemySprite.getWidth()) {
-						tempMovement = 0f;
-					} else {
-						tempMovement = player.dt * 4f;
-					}
+					groundEnemy.groundEnemyMovement(Gdx.graphics.getDeltaTime());
 				}
-				groundEnemy.groundEnemyMovement(tempMovement);
-
 
 				//Update Player Bullets
 				for (int i = 0; i < bullets.size(); i++) {
-					bullets.get(i).projectileMovement(player.dt);
+					bullets.get(i).projectileMovement(Gdx.graphics.getDeltaTime());
 					if(bullets.get(i).shouldRemove()) {
 						bullets.remove(i);
 						i--;
@@ -264,6 +256,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					//Checking if bullets collide with enemy
 					for (int i = 0; i < bullets.size(); i++) {
 						if(bullets.get(i).getHitBox().overlaps(groundEnemy.getHitBox())) {
+							System.out.println("ENEMY HIT!");
 							groundEnemy.setDying();
 							bullets.remove(i);
 							i--;
@@ -279,7 +272,6 @@ public class MyGdxGame extends ApplicationAdapter {
 					}
 				}
 
-
 				//Poll user for input
 				moveLeftButton.update(checkTouch, touchX, touchY);
 				moveRightButton.update(checkTouch, touchX, touchY);
@@ -288,19 +280,23 @@ public class MyGdxGame extends ApplicationAdapter {
 
 				int moveX = 0;
 				int moveY = 0;
-				if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || moveLeftButton.isDown) {
+				if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || moveLeftButton.isDown
+						&& gameState == GameState.PLAYING) {
 					moveLeftButton.isDown = true;
 					moveX -= 1;
 				}
-				if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || moveRightButton.isDown) {
+				if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) || moveRightButton.isDown
+						&& gameState == GameState.PLAYING) {
 					moveRightButton.isDown = true;
 					moveX += 1;
 				}
-				if (Gdx.input.isKeyPressed(Input.Keys.UP) || moveUpButton.isDown) {
+				if (Gdx.input.isKeyPressed(Input.Keys.UP) || moveUpButton.isDown
+						&& gameState == GameState.PLAYING) {
 					moveUpButton.isDown = true;
 					moveY += 1;
 				}
-				if (Gdx.input.isKeyPressed(Input.Keys.SPACE) || shootButton.isDown) {
+				if (Gdx.input.isKeyPressed(Input.Keys.SPACE) || shootButton.isDown
+						&& gameState == GameState.PLAYING) {
 					player.shoot();
 					shootButton.isDown = true;
 					player.shoot();
@@ -309,29 +305,9 @@ public class MyGdxGame extends ApplicationAdapter {
 				//Character and Camera Movement
 				player.movePlayer(moveX, moveY, tileLayer, camera);
 				camera.update();
+				break;
 
 			case COMPLETE:
-
-				//Update Ground Enemy
-				if(player.currentPlayerState == Player.PlayerState.RUNNING) {
-					tempMovement = player.dt;
-					//Determine when to spawn enemy
-					if(groundEnemy.groundEnemySprite.getX() < Gdx.graphics.getWidth() - groundEnemy.groundEnemySprite.getWidth()) {
-						if(player.currentPlayerState == Player.PlayerState.DEAD) {
-							groundEnemy.setDying();
-						}
-						groundEnemy.setAlive();
-						groundEnemy.groundEnemySprite.setPosition((player.playerSprite.getX() + Gdx.graphics.getWidth() + groundEnemy.groundEnemySprite.getWidth()) + rand.nextInt(1000), 61);
-					}
-				} else {
-					if(groundEnemy.groundEnemySprite.getX() < Gdx.graphics.getWidth() - groundEnemy.groundEnemySprite.getWidth()) {
-						tempMovement = 0f;
-					} else {
-						tempMovement = player.dt * 4f;
-					}
-				}
-				groundEnemy.groundEnemyMovement(tempMovement);
-
 
 				//Update Player Bullets
 				for (int i = 0; i < bullets.size(); i++) {
@@ -342,15 +318,27 @@ public class MyGdxGame extends ApplicationAdapter {
 					}
 				}
 
+				//Update Ground Enemy
+				if(player.currentPlayerState == Player.PlayerState.DEAD
+				|| player.currentPlayerState == Player.PlayerState.DYING) {
+					if (groundEnemy.groundEnemySprite.getX() < Gdx.graphics.getWidth() - groundEnemy.groundEnemySprite.getWidth()) {
+						groundEnemy.groundEnemyMovement(0f);
+					} else {
+						groundEnemy.groundEnemyMovement(Gdx.graphics.getDeltaTime() * 4f);
+					}
+				}
+
 				//Buttons
 				restartButton.update(checkTouch, touchX, touchY);
 				exitButton.update(checkTouch, touchX, touchY);
 
-				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || restartButton.isDownPrev && !restartButton.isDown) {
+				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || restartButton.isDownPrev && !restartButton.isDown
+						&& gameState == GameState.COMPLETE) {
 					newGame();
 					gameState = GameState.PLAYING;
 				}
-				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown) {
+				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown
+						&& gameState == GameState.COMPLETE) {
 					player.dispose();
 					groundEnemy.dispose();
 					for (int i = 0; i < bullets.size(); i++) {
@@ -362,8 +350,6 @@ public class MyGdxGame extends ApplicationAdapter {
 					Gdx.app.exit();
 				}
 				break;
-
-
 		}
 
 	}
@@ -407,7 +393,6 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void dispose () {
 		batch.dispose();
-		player.playerTexture.dispose();
 		buttonSquareTexture.dispose();
 		buttonSquareDownTexture.dispose();
 		buttonLongTexture.dispose();

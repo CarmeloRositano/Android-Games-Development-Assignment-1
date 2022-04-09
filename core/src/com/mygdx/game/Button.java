@@ -62,6 +62,7 @@ public class Button {
 
 
     public void dispose() {
-
+        textureDown.dispose();
+        textureUp.dispose();
     }
 }
