@@ -33,7 +33,8 @@ public class TiledGameMap extends Widget {
         timeElapsed = 0f;
     }
 
-    public void render (OrthographicCamera camera, MyGdxGame.GameState gameState) {
+    public void render (OrthographicCamera camera, MyGdxGame.GameState gameState, Player player) {
+
 
         //Speed up the player movement over time
         timeElapsed += Gdx.graphics.getDeltaTime();
@@ -42,12 +43,15 @@ public class TiledGameMap extends Widget {
 
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
+
         //Parallax Effect
         mapLayers.get("Sun").setOffsetX((camera.position.x - camera.viewportWidth) - sunOffset);
         mapLayers.get("Foreground 1").setOffsetX((camera.position.x - camera.viewportWidth) - foregroundOneOffset);
         mapLayers.get("Foreground 2").setOffsetX((camera.position.x - camera.viewportWidth) - foregroundTwoOffset);
         mapLayers.get("Ground").setOffsetX((camera.position.x - camera.viewportWidth) - groundOffset);
         mapLayers.get("Background").setOffsetX((camera.position.x - camera.viewportWidth) - backgroundOffset);
+
+        if (player.currentPlayerState == Player.PlayerState.DEAD) return;
 
         //Increment Offset
         sunOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.00001f;

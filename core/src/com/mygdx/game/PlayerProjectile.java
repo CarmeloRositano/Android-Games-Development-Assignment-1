@@ -3,6 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class PlayerProjectile {
@@ -43,10 +44,16 @@ public class PlayerProjectile {
     public void draw(SpriteBatch batch) {
         batch.begin();
         bulletSprite.draw(batch);
-        System.out.println("DRAWING");
         batch.end();
     }
 
+    public Rectangle getHitBox() {
+        return bulletSprite.getBoundingRectangle();
+    }
+
+    public void dispose() {
+        bulletTexture.dispose();
+    }
 
     public boolean shouldRemove() {
         return remove;

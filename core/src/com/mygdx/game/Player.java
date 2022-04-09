@@ -5,13 +5,11 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -19,14 +17,14 @@ public class Player {
 
     public enum PlayerState { RUNNING, DYING, DEAD, SHOOTING }
 
-    private static float MOVEMENT_SPEED = 200.0f;
-    private static float CONSTANT_SPEED = 150.0f;
+    private static float MovementSpeed = 200.0f;
+    private static float ConstantSpeed = 150.0f;
     private static final float GRAVITY = 70f;
 
+    ShapeRenderer shapeRenderer;
 
     boolean isShooting;
     boolean canJump;
-    boolean playerAlive;
 
     PlayerState currentPlayerState;
 
@@ -38,18 +36,13 @@ public class Player {
 
     //Player - Walking
     Texture playerWalkingTexture;
-    private TextureRegion[] playerWalkingFrames;
-    private Animation playerWalkingAnimation;
+    private Animation<TextureRegion> playerWalkingAnimation;
     //Dying
     Texture playerDyingTexture;
-    private TextureRegion[] playerDyingFrames;
-    private Animation playerDyingAnimation;
+    private Animation<TextureRegion> playerDyingAnimation;
     //Shooting
     Texture playerShootingTexture;
     ArrayList<PlayerProjectile> bullets;
-
-    private TextureRegion[] playerShootingFrames;
-
     private Animation playerShootingAnimation;
 
     //Game Clock
@@ -60,6 +53,8 @@ public class Player {
 
     public Player(ArrayList<PlayerProjectile> bullets) {
         currentPlayerState = PlayerState.RUNNING;
+
+        shapeRenderer = new ShapeRenderer();
 
         this.bullets = bullets;
 
@@ -74,14 +69,14 @@ public class Player {
         playerWalkingTexture = new Texture("player/moving.png");
         TextureRegion[][] walkTemp = TextureRegion.split(playerWalkingTexture, playerWalkingTexture.getWidth() / FrameCol,
                 playerWalkingTexture.getHeight() / FrameRow);
-        playerWalkingFrames = new TextureRegion[FrameCol * FrameRow];
+        TextureRegion[] playerWalkingFrames = new TextureRegion[FrameCol * FrameRow];
         int index = 0;
         for (int i = 0; i < FrameRow; i++) {
             for (int j = 0; j < FrameCol; j++) {
                 playerWalkingFrames[index++] = walkTemp[i][j];
             }
         }
-        playerWalkingAnimation = new Animation(1f/30f, playerWalkingFrames);
+        playerWalkingAnimation = new Animation(1f/30f, (Object[]) playerWalkingFrames);
 
         //Player Dying Texture and Animation Build
         FrameCol = 5;
@@ -89,7 +84,7 @@ public class Player {
         playerDyingTexture = new Texture("player/dying.png");
         TextureRegion[][] dyingTemp = TextureRegion.split(playerDyingTexture, playerDyingTexture.getWidth() / FrameCol,
                 playerDyingTexture.getHeight() / FrameRow);
-        playerDyingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
+        TextureRegion[] playerDyingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
         index = 0;
         for (int i = 0; i < FrameRow; i++) {
             for (int j = 0; j < FrameCol; j++) {
@@ -98,7 +93,7 @@ public class Player {
                 }
             }
         }
-        playerDyingAnimation = new Animation(1f/30f, playerDyingFrames);
+        playerDyingAnimation = new Animation(1f/30f, (Object[]) playerDyingFrames);
 
         //player shooting Texture and Animation Build
         FrameCol = 3;
@@ -106,7 +101,7 @@ public class Player {
         playerShootingTexture = new Texture("player/shooting.png");
         TextureRegion[][] shootingTemp = TextureRegion.split(playerShootingTexture, playerShootingTexture.getWidth() / FrameCol,
                 playerShootingTexture.getHeight() / FrameRow);
-        playerShootingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
+        TextureRegion[] playerShootingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
         index = 0;
         for (int i = 0; i < FrameRow; i++) {
             for (int j = 0; j < FrameCol; j++) {
@@ -115,13 +110,12 @@ public class Player {
                 }
             }
         }
-        playerShootingAnimation = new Animation (1f/30f, playerShootingFrames);
+        playerShootingAnimation = new Animation (1f/30f, (Object[]) playerShootingFrames);
 
         updateCurrentPlayerState();
 
         isShooting = false;
         canJump = false;
-        playerAlive = true;
         dt = 0.0f;
         stateTime = 0.0f;
     }
@@ -146,7 +140,7 @@ public class Player {
                 break;
 
             case DEAD:
-                MOVEMENT_SPEED = CONSTANT_SPEED = 0;
+                MovementSpeed = ConstantSpeed = 0;
                 break;
 
             case SHOOTING:
@@ -166,6 +160,7 @@ public class Player {
     public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer, Camera camera) {
 
         //If player is within viewport
+        if(currentPlayerState == PlayerState.DYING || currentPlayerState == PlayerState.DEAD) return;
         if (playerSprite.getX() < camera.position.x - camera.viewportWidth * 0.5f) {
             playerSprite.setPosition(camera.position.x - camera.viewportWidth * 0.5f, playerSprite.getY());
             playerDelta.x = 0f;
@@ -173,8 +168,8 @@ public class Player {
             playerSprite.setPosition((camera.position.x + camera.viewportWidth * 0.5f) - playerSprite.getWidth(), playerSprite.getY());
             playerDelta.x = 0f;
         } else {
-            this.playerDelta.x = x * MOVEMENT_SPEED * dt;
-            playerDeltaRectangle.x += (x * MOVEMENT_SPEED * dt);
+            this.playerDelta.x = x * MovementSpeed * dt;
+            playerDeltaRectangle.x += (x * MovementSpeed * dt);
         }
 
         if(collidesBottom(collisionLayer)) {
@@ -184,7 +179,7 @@ public class Player {
                 stateTime = 0f;
                 this.playerDelta.y = (playerSprite.getY() - this.playerDelta.y * dt) / 2;
             } else {
-                this.playerDelta.y = y * MOVEMENT_SPEED * dt;
+                this.playerDelta.y = y * MovementSpeed * dt;
             }
         //Player is in the air (Applies gravity)
         } else {
@@ -213,6 +208,13 @@ public class Player {
         return false;
     }
 
+    public Rectangle getHitBox() {
+        return new Rectangle(playerSprite.getX() + playerSprite.getWidth() * 0.3f,
+                playerSprite.getY(),
+                playerSprite.getWidth() * 0.54f,
+                playerSprite.getHeight() * 0.8f);
+    }
+
     public void shoot() {
         if(isShooting) return;
         if(bullets.size() == 4) return;
@@ -222,10 +224,32 @@ public class Player {
         isShooting = true;
     }
 
+    public void setDying() {
+        currentPlayerState = PlayerState.DYING;
+        stateTime = 0f;
+    }
+
+    public void setAlive() {
+        currentPlayerState = PlayerState.RUNNING;
+        stateTime = 0f;
+    }
+
+    public void newGame() {
+        MovementSpeed = 200.0f;
+        ConstantSpeed = 150.0f;
+    }
+
+    public void dispose() {
+        playerWalkingTexture.dispose();
+        playerDyingTexture.dispose();
+        playerTexture.dispose();
+        playerShootingTexture.dispose();
+        shapeRenderer.dispose();
+    }
 
     //Getters and Setters
     public static float getConstantSpeed() {
-        return CONSTANT_SPEED;
+        return ConstantSpeed;
     }
 
 }
