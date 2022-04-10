@@ -29,13 +29,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	TiledGameMap gameMap;
 
 	//Audio
-	Music mainMenu;
-	Music gamePlay;
-	Music dead;
+	Music mainMenu, gamePlay, dead;
 
 	//Map and Rendering
-	SpriteBatch batch;
-	SpriteBatch uiBatch;
+	SpriteBatch batch, uiBatch;
 	OrthographicCamera camera;
 	ShapeRenderer shapeRenderer;
 	float score;
@@ -64,20 +61,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	Rectangle tileRectangle;
 
 	//UI textures
-	Texture buttonSquareTexture;
-	Texture buttonSquareDownTexture;
-	Texture buttonLongTexture;
-	Texture buttonLongDownTexture;
+	Texture buttonSquareTexture, buttonSquareDownTexture, buttonLongTexture, buttonLongDownTexture;
 
 	//UI Buttons
-	Button moveLeftButton;
-	Button moveRightButton;
-	Button moveUpButton;
-	Button shootButton;
-	Button restartButton;
-	Button startButton;
-	Button exitButton;
-	Button pauseButton;
+	Button moveLeftButton, moveRightButton, moveUpButton, shootButton
+			, restartButton, startButton, exitButton, pauseButton;
 
 	//Menu
 	float menuDelay;
@@ -168,10 +156,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		gameMap.render(camera, gameState, player);
 
-		//Player
+		//Update Actors
 		player.updateCurrentState(gameState);
-
-		//Enemy
 		groundEnemy.updateCurrentState(gameMap, gameState);
 		flyingEnemy.updateCurrentState(gameMap, gameState);
 
@@ -237,7 +223,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		uiBatch.end();
 	}
 
-
+	/**
+	 * Updates the game depending on the current state of the game.
+	 */
 	public void update() {
 
 		//Touch Input Info
@@ -249,10 +237,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
 
 		switch(gameState) {
-
 			case MAIN_MENU:
+				//Music
 				mainMenu.setVolume(.2f);
 				mainMenu.play();
+
+				//Menu Buttons - Poll user for input
 				startButton.update(checkTouch, touchX, touchY);
 				exitButton.update(checkTouch, touchX, touchY);
 
@@ -278,14 +268,11 @@ public class MyGdxGame extends ApplicationAdapter {
 						i--;
 					}
 					gameMap.dispose();
-
 					Gdx.app.exit();
 				}
 				break;
-
 			case PLAYING:
-
-				//Play Music
+				//Music
 				dead.stop();
 				gamePlay.play();
 
@@ -307,28 +294,28 @@ public class MyGdxGame extends ApplicationAdapter {
 					}
 				}
 
-				//Update Enemies - Ground Enemy
-				//Determine when to spawn enemy
+				//Update Enemies
+				//Ground Enemy
 				if(groundEnemy.sprite.getX() < Gdx.graphics.getWidth() - groundEnemy.sprite.getWidth()) {
 					groundEnemy.setAlive();
-					groundEnemy.sprite.setPosition((player.sprite.getX() + Gdx.graphics.getWidth() + groundEnemy.sprite.getWidth()) + rand.nextInt(1000),
-												   61);
+					groundEnemy.sprite.setPosition((player.sprite.getX() + Gdx.graphics.getWidth()
+									+ groundEnemy.sprite.getWidth()) + rand.nextInt(1000),61);
 				} else {
 					groundEnemy.move(Gdx.graphics.getDeltaTime());
 				}
 
-
 				//Flying Enemy
 				if(flyingEnemy.sprite.getX() > camera.position.x + flyingEnemy.sprite.getWidth() * 2f) {
 					flyingEnemy.setAlive();
-					flyingEnemy.sprite.setPosition((player.sprite.getX() - Gdx.graphics.getWidth() - flyingEnemy.sprite.getWidth() - rand.nextInt(1000)),
+					flyingEnemy.sprite.setPosition((player.sprite.getX() - Gdx.graphics.getWidth()
+									- flyingEnemy.sprite.getWidth() - rand.nextInt(1000)),
 													61 + player.sprite.getHeight() * 2f);
 				} else {
 					flyingEnemy.move(Gdx.graphics.getDeltaTime(), player);
 				}
 
-
-				//Collision Checks - Ground Enemy
+				//Collision Checks
+				//Ground Enemy
 				if (groundEnemy.enemyState == GroundEnemy.EnemyState.MOVING) {
 					//Checking if bullets collide with enemy
 					for (int i = 0; i < bullets.size(); i++) {
@@ -416,7 +403,10 @@ public class MyGdxGame extends ApplicationAdapter {
 				camera.update();
 				break;
 			case PAUSED:
+				//Music
 				gamePlay.setVolume(0.05f);
+
+				//Pause Screen Buttons - Poll user for input
 				startButton.update(checkTouch, touchX, touchY);
 				exitButton.update(checkTouch, touchX, touchY);
 				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || startButton.isDownPrev && !startButton.isDown
@@ -489,7 +479,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					}
 				}
 
-				//Buttons
+				//End Screen Buttons - Poll user for input
 				restartButton.update(checkTouch, touchX, touchY);
 				exitButton.update(checkTouch, touchX, touchY);
 
@@ -522,6 +512,11 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	}
 
+	/**
+	 * Sets up what is required to start the game. When called it was chance all variables back to
+	 * their base value so the game is able to be restarted without closing the application
+	 * and opening it again.
+	 */
 	public void newGame() {
 		gameState = GameState.MAIN_MENU;
 
@@ -547,6 +542,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		restartActive = false;
 	}
 
+	/**
+	 * Dev tool - Draws a green outline around all hit boxes.
+	 */
 	private void ESPHitBoxView() {
 		shapeRenderer.setProjectionMatrix(camera.combined);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);

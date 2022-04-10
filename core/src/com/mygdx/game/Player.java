@@ -16,21 +16,24 @@ import java.util.ArrayList;
 
 public class Player {
 
-    public enum PlayerState { RUNNING, DYING, DEAD, SHOOTING }
+    public enum PlayerState { RUNNING, DYING, DEAD, SHOOTING;}
 
+    private static final float GRAVITY = 70f;
     private static float MovementSpeed = 200.0f;
     private static float ConstantSpeed = 150.0f;
-    private static final float GRAVITY = 70f;
 
     ShapeRenderer shapeRenderer;
 
-    boolean isShooting;
-    boolean canJump;
-
     PlayerState currentState;
 
+    private TextureRegion currentFrame;
     Sprite sprite;
     Vector2 delta;
+
+    boolean isShooting;
+    boolean canJump;
+    float dt;
+    float stateTime;
 
     //Player - Walking
     Texture walkingTexture;
@@ -44,12 +47,11 @@ public class Player {
     ArrayList<PlayerProjectile> bullets;
     Sound shoot;
 
-    //Game Clock
-    float dt;
-    float stateTime;
-    private TextureRegion currentFrame;
-
-
+    /**
+     * Constructs the player class. Initializing all variables and building all animations
+     * (Walking, Dying, Shooting)
+     * @param bullets
+     */
     public Player(ArrayList<PlayerProjectile> bullets) {
         currentState = PlayerState.RUNNING;
 
@@ -118,7 +120,11 @@ public class Player {
         stateTime = 0.0f;
     }
 
-    //Updates the currentPlayerState to determine what animation that player sprite should be in
+    /**
+     * Updates self depending on its current state as well as the game state as well as self state.
+     * Updates the animation so the player is in the correct animation.
+     * @param gameState the state of the game to determine if enemy should be moving and how fast
+     */
     public void updateCurrentState(MyGdxGame.GameState gameState) {
         if(gameState == MyGdxGame.GameState.PAUSED) return;
         stateTime += Gdx.graphics.getDeltaTime();
@@ -154,7 +160,14 @@ public class Player {
         sprite.setRegion(currentFrame);
     }
 
-    //Moves the player
+    /**
+     * Translates sprite in relation to the given x, y value. Checks collision on the map and
+     * keeps self within the viewport
+     * @param x +1 if moving right -1 if moving left
+     * @param y +1 if moving up -1 if moving down
+     * @param collisionLayer the collision data that is given through map class
+     * @param camera the camera to determine view port and where player is in relation
+     */
     public void move(int x, int y, TiledMapTileLayer collisionLayer, Camera camera) {
 
         //If player is within viewport
@@ -168,6 +181,7 @@ public class Player {
             this.delta.x = x * MovementSpeed * dt;
         }
 
+        //If player is touching the ground
         if(collidesBottom(collisionLayer)) {
             //Player jump
             if(y == 1 && currentState != PlayerState.DEAD && currentState != PlayerState.DYING) {
@@ -189,11 +203,24 @@ public class Player {
 
         sprite.translate(this.delta.x, this.delta.y);
     }
+
+    /**
+     * checks if coordinates around self have any collision tiles and returns results
+     * @param x x coordinates for spawn
+     * @param y y coordinates for spawn
+     * @param collisionLayer the collision data that is given through map class
+     * @return if self is going to be blocked by any collision map tiles
+     */
     private boolean isCellBlocked(float x, float y, TiledMapTileLayer collisionLayer) {
         TiledMapTileLayer.Cell cell = collisionLayer.getCell((int) (x / collisionLayer.getTileWidth()), (int) (y / collisionLayer.getTileHeight()));
         return cell != null && cell.getTile() != null;
     }
 
+    /**
+     * checks cells around given coordinates on the given collisionlayer to determine if projectile
+     * @param collisionLayer the collision data that is given through map class
+     * @return if self is going to be blocked by any collision map tiles
+     */
     public boolean collidesBottom(TiledMapTileLayer collisionLayer) {
         for(float step = 0; step < sprite.getWidth(); step += collisionLayer.getTileWidth() / 2f) {
             if(isCellBlocked(sprite.getX() + step, sprite.getY(), collisionLayer)) {
@@ -203,6 +230,10 @@ public class Player {
         return false;
     }
 
+    /**
+     * Creates a custom hit box and returns it
+     * @return  Rectangle that is the hit box
+     */
     public Rectangle getHitBox() {
         return new Rectangle(sprite.getX() + sprite.getWidth() * 0.3f,
                 sprite.getY(),
@@ -210,6 +241,10 @@ public class Player {
                 sprite.getHeight() * 0.8f);
     }
 
+    /**
+     * Shoots projectile if the not already shooting or if there are 4 or more bullets already out.
+     * Chances current state to shooting.
+     */
     public void shoot() {
         if(isShooting) return;
         if(bullets.size() == 4) return;
@@ -220,21 +255,33 @@ public class Player {
         isShooting = true;
     }
 
+    /**
+     * Sets the current state to dying
+     */
     public void setDying() {
         currentState = PlayerState.DYING;
         stateTime = 0f;
     }
 
+    /**
+     * Sets the current state to moving
+     */
     public void setAlive() {
         currentState = PlayerState.RUNNING;
         stateTime = 0f;
     }
 
+    /**
+     * sets variables to base state for when the game is restarted
+     */
     public void newGame() {
         MovementSpeed = 200.0f;
         ConstantSpeed = 150.0f;
     }
 
+    /**
+     * Dispose of variables
+     */
     public void dispose() {
         walkingTexture.dispose();
         dyingTexture.dispose();
@@ -243,7 +290,10 @@ public class Player {
         shoot.dispose();
     }
 
-    //Getters and Setters
+    /**
+     * Getter for constant speed
+     * @return ConstantSpeed
+     */
     public static float getConstantSpeed() {
         return ConstantSpeed;
     }

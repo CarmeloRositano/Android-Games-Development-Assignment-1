@@ -20,6 +20,9 @@ public class TiledGameMap extends Widget {
     float backgroundOffset;
     float timeElapsed;
 
+    /**
+     * Loads the map and sets all offsets
+     */
     public TiledGameMap() {
         tiledMap = new TmxMapLoader().load("background/Map.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
@@ -33,6 +36,13 @@ public class TiledGameMap extends Widget {
         timeElapsed = 0f;
     }
 
+    /**
+     * Renders all the terrain. Scrolls through all terrain at different speeds to allow for a
+     * parallax effect. Scrolling is infinite and gets faster over time.
+     * @param camera the viewport of the game
+     * @param gameState the state that the game is currently in
+     * @param player the player
+     */
     public void render (OrthographicCamera camera, MyGdxGame.GameState gameState, Player player) {
 
         tiledMapRenderer.setView(camera);
@@ -55,14 +65,14 @@ public class TiledGameMap extends Widget {
 
         if (player.currentState == Player.PlayerState.DEAD) return;
 
-        //Increment Offset
+        //Increment Offset for parallax effect
         sunOffset+= (Player.getConstantSpeed() + (timeElapsed)) * 0.00001f;
         backgroundOffset += (Player.getConstantSpeed() + (timeElapsed)) * 0.0001f;
         foregroundOneOffset+= (Player.getConstantSpeed() + (timeElapsed)) * 0.01f;
         foregroundTwoOffset+= (Player.getConstantSpeed() + (timeElapsed)) * 0.001f;
         groundOffset+= (Player.getConstantSpeed() + (timeElapsed)) * 0.05f;
 
-        //Reset Offset (1920 Width of the section of tile map)
+        //Reset Offset (1920 Width of the section of tile map) allows for infinite scrolling
         if (sunOffset >= 1920) sunOffset = 0;
         if (foregroundOneOffset >= 1920) foregroundOneOffset = 0;
         if (foregroundTwoOffset >= 1920) foregroundTwoOffset = 0;
@@ -70,10 +80,16 @@ public class TiledGameMap extends Widget {
         if (backgroundOffset >= 1920) backgroundOffset = 0;
     }
 
+    /**
+     * resets the overtime speed increase
+     */
     public void newGame() {
         timeElapsed = 0f;
     }
-
+    
+    /**
+     * Dispose of variables
+     */
     public void dispose() {
         tiledMap.dispose();
         tiledMapRenderer.dispose();

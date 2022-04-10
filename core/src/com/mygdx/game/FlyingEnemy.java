@@ -18,6 +18,8 @@ public class FlyingEnemy {
 
     Sprite sprite;
     Vector2 delta;
+    float stateTime;
+    EnemyState enemyState;
 
     //Enemy Walking
     private final Texture walkingTexture = new Texture("air_enemy/moving.png"); //Set here to stop lag from loading texture from drive
@@ -36,10 +38,13 @@ public class FlyingEnemy {
     //Bombs
     ArrayList<FlyingEnemyProjectile> bombs;
 
-    float stateTime;
-
-    EnemyState enemyState;
-
+    /**
+     * Creates a FlyingEnemy. sets its state to MOVING and initializes all variables.
+     * Builds all animations that are used (Walking, Dying, and Shooting) and sets sprite position
+     * @param x x coordinates for spawn
+     * @param y y coordinates for spawn
+     * @param bombs A ArrayList of bombs to be edited and viewed for when shooting
+     */
     public FlyingEnemy(float x, float y, ArrayList<FlyingEnemyProjectile> bombs) {
         enemyState = EnemyState.MOVING;
         stateTime = 0.0f;
@@ -101,6 +106,13 @@ public class FlyingEnemy {
         sprite.setPosition(x, y);
     }
 
+    /**
+     * Updates self depending on its current state as well as the game state. Updates the
+     * animation so the enemy is in the correct animation. Times when the projectile to be synced
+     * with the shooting animation.
+     * @param gameMap game map to determine speed
+     * @param gameState the state of the game to determine if enemy should be moving and how fast
+     */
     public void updateCurrentState(TiledGameMap gameMap, MyGdxGame.GameState gameState) {
         if(gameState == MyGdxGame.GameState.PAUSED) return;
         stateTime += Gdx.graphics.getDeltaTime();
@@ -147,6 +159,12 @@ public class FlyingEnemy {
         }
     }
 
+    /**
+     * Moves and determines when the player is underneath self allowing for a projectile to be shot
+     * at the player. Moves downwards when in dying animation.
+     * @param dt Delta Time to give smoother movement
+     * @param player a player object to determine player hit box x, y for shooting and collision
+     */
     public void move(float dt, Player player) {
         if(isShooting) return;
         if(getHitBox().getX() < player.getHitBox().getX()
@@ -164,6 +182,10 @@ public class FlyingEnemy {
 
     }
 
+    /**
+     * Sets self to shooting, which changes the animation to the shooting animation and setting
+     * variables so enemy can only shoot one projectile per shooting animation.
+     */
     public void shoot() {
         if(isShooting) return;
         stateTime = 0f;
@@ -171,6 +193,10 @@ public class FlyingEnemy {
         enemyState = EnemyState.SHOOTING;
     }
 
+    /**
+     * Creates a custom hit box and returns it
+     * @return  Rectangle that is the hit box
+     */
     public Rectangle getHitBox() {
         return new Rectangle(sprite.getX() + sprite.getWidth() / 3,
                             sprite.getY(),
@@ -178,24 +204,36 @@ public class FlyingEnemy {
                             sprite.getHeight());
     }
 
-
+    /**
+     * Draws the sprite to screen on the provided Batch
+     * @param batch The Batch to draw the text to screen
+     */
     public void draw(SpriteBatch batch) {
         batch.begin();
         sprite.draw(batch);
         batch.end();
     }
 
+    /**
+     * Sets the current state to dying
+     */
     public void setDying() {
         enemyState = EnemyState.DYING;
         stateTime = 0f;
     }
 
+    /**
+     * Sets the current state to moving
+     */
     public void setAlive() {
         enemyState = EnemyState.MOVING;
         stateTime = 0f;
         constantSpeed = 100f;
     }
-
+    
+    /**
+     * Dispose of variables
+     */
     public void dispose() {
         dyingTexture.dispose();
         walkingTexture.dispose();
