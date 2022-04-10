@@ -125,6 +125,7 @@ public class FlyingEnemy {
 
             case DEAD:
                 //make enemy move at the speed of the ground when dead
+                sprite.setPosition(sprite.getX() + Gdx.graphics.getWidth(), sprite.getY());
                 constantSpeed = ((Player.getConstantSpeed() + (gameMap.timeElapsed * 1f)) * 0.05f) / Gdx.graphics.getDeltaTime();
                 break;
 

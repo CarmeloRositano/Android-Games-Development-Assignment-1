@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapLayer;
@@ -39,6 +40,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch uiBatch;
 	OrthographicCamera camera;
 	ShapeRenderer shapeRenderer;
+	float score;
 
 	//Game world Objects
 	MapLayer objectLayer;
@@ -83,6 +85,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	//Text
 	BitmapFont font;
+	GlyphLayout glyphLayout;
 
 	//Just use this to only restart when the restart button is released instead of immediately as it's pressed
 	boolean restartActive;
@@ -148,6 +151,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		//Text
 		font = new BitmapFont();
+		glyphLayout = new GlyphLayout();
 
 		newGame();
 	}
@@ -156,6 +160,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	public void render () {
 
 		player.dt = Gdx.graphics.getDeltaTime();
+
+		if (player.currentState != Player.PlayerState.DEAD) score += Gdx.graphics.getDeltaTime() / 2;
 
 		//Game World
 		update();
@@ -204,6 +210,8 @@ public class MyGdxGame extends ApplicationAdapter {
 				break;
 			case PLAYING:
 				uiBatch.setColor(1, 1, 1, 0.3f);
+				font.getData().setScale(2, 2);
+				font.draw(uiBatch, "SCORE: " + (int) Math.ceil(score), 0, Gdx.graphics.getHeight());
 				moveLeftButton.draw(uiBatch);
 				moveRightButton.draw(uiBatch);
 				moveUpButton.draw(uiBatch);
@@ -215,6 +223,11 @@ public class MyGdxGame extends ApplicationAdapter {
 				restartButton.addText("Restart", uiBatch);
 				exitButton.draw(uiBatch);
 				exitButton.addText("Exit", uiBatch);
+				font.getData().setScale(5, 5);
+				glyphLayout.setText(font, "Game Over");
+				font.draw(uiBatch, glyphLayout,Gdx.graphics.getWidth() * 0.5f - glyphLayout.width * 0.5f, Gdx.graphics.getHeight() * 0.5f);
+				glyphLayout.setText(font, "Score: " + (int)Math.ceil(score));
+				font.draw(uiBatch, glyphLayout, Gdx.graphics.getWidth() * 0.5f - glyphLayout.width * 0.5f, Gdx.graphics.getHeight() * 0.35f);
 				break;
 		}
 		uiBatch.end();
@@ -244,6 +257,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || startButton.isDownPrev && !startButton.isDown
 					&& gameState == GameState.MAIN_MENU) {
 					gameState = GameState.PLAYING;
+					score = 0f;
 					mainMenu.stop();
 				}
 				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown
@@ -320,6 +334,7 @@ public class MyGdxGame extends ApplicationAdapter {
 						if(bullets.get(i).getHitBox().overlaps(groundEnemy.getHitBox())) {
 							groundEnemy.setDying();
 							bullets.remove(i);
+							score += 50f;
 							i--;
 						}
 					}
@@ -339,6 +354,7 @@ public class MyGdxGame extends ApplicationAdapter {
 						if(bullets.get(i).getHitBox().overlaps(flyingEnemy.getHitBox())) {
 							flyingEnemy.setDying();
 							bullets.remove(i);
+							score += 100f;
 							i--;
 						}
 					}
@@ -447,6 +463,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || restartButton.isDownPrev && !restartButton.isDown
 						&& gameState == GameState.COMPLETE) {
 					newGame();
+					score = 0f;
 					gameState = GameState.PLAYING;
 				}
 				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown

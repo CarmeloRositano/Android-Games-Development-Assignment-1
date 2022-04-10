@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Button {
@@ -20,6 +21,7 @@ public class Button {
 
     //Text
     BitmapFont font;
+    GlyphLayout glyphLayout;
 
     public Button(float x, float y, float w, float h, Texture textureUp, Texture textureDown) {
         this.x = x;
@@ -31,6 +33,7 @@ public class Button {
         this.textureDown = textureDown;
 
         font = new BitmapFont();
+        glyphLayout = new GlyphLayout();
     }
 
     public void update(boolean checkTouch, int touchX, int touchY) {
@@ -48,7 +51,8 @@ public class Button {
     }
 
     public void addText(String text, Batch batch) {
-        font.draw(batch, text, x + (w * 0.35f), y + h / 1.4f);
+        glyphLayout.setText(font, text);
+        font.draw(batch, glyphLayout, (x + w / 2) - glyphLayout.width / 2, (y + h /2) + glyphLayout.height / 2 );
         font.getData().setScale(w / 100);
     }
 
