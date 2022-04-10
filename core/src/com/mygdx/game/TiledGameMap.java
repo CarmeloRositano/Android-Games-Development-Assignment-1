@@ -68,6 +68,10 @@ public class TiledGameMap extends Widget {
         if (backgroundOffset >= 1920) backgroundOffset = 0;
     }
 
+    public void newGame() {
+        timeElapsed = 0f;
+    }
+
     public void dispose() {
         tiledMap.dispose();
         tiledMapRenderer.dispose();

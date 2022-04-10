@@ -99,7 +99,7 @@ public class GroundEnemy{
         }
     }
 
-    public void Move(float dt) {
+    public void move(float dt) {
         this.delta.x = -constantSpeed * dt;
         sprite.translate(delta.x, delta.y);
         if(enemyState == EnemyState.DYING) {

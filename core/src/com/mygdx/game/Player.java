@@ -153,10 +153,9 @@ public class Player {
     }
 
     //Moves the player
-    public void Move(int x, int y, TiledMapTileLayer collisionLayer, Camera camera) {
+    public void move(int x, int y, TiledMapTileLayer collisionLayer, Camera camera) {
 
         //If player is within viewport
-        if(currentState == PlayerState.DYING || currentState == PlayerState.DEAD) return;
         if (sprite.getX() < camera.position.x - camera.viewportWidth * 0.5f) {
             sprite.setPosition(camera.position.x - camera.viewportWidth * 0.5f, sprite.getY());
             delta.x = 0f;

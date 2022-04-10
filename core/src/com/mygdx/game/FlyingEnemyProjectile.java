@@ -7,19 +7,18 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-public class PlayerProjectile {
+public class FlyingEnemyProjectile {
 
-    private static final float BULLET_SPEED = 1000f;
-    private static final float GRAVITY = 98f;
+    private static final float BULLET_SPEED = 98f;
 
-    private final Texture texture = new Texture("player/projectile.png"); //Set here to stop lag from loading texture from drive
+    private final Texture texture = new Texture("air_enemy/projectile.png"); //Set here to stop lag from loading texture from drive
     Sprite sprite;
     Vector2 delta;
     float lifeTime;
     float lifeTimer;
     private boolean remove;
 
-    public PlayerProjectile(float x, float y) {
+    public FlyingEnemyProjectile(float x, float y) {
 
         sprite = new Sprite(texture);
         sprite.setPosition(x, y);
@@ -30,8 +29,7 @@ public class PlayerProjectile {
     }
 
     public void move(float dt) {
-        this.delta.x = BULLET_SPEED * dt;
-        this.delta.y -= (GRAVITY * dt);
+        this.delta.y -= (BULLET_SPEED * dt) / 3;
 
         sprite.translate(this.delta.x, this.delta.y);
 
@@ -75,5 +73,5 @@ public class PlayerProjectile {
         }
         return false;
     }
-}
 
+}

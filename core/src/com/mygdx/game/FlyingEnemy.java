@@ -9,9 +9,11 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.ArrayList;
+
 public class FlyingEnemy {
 
-    public enum EnemyState { MOVING, DYING, DEAD }
+    public enum EnemyState { MOVING, DYING, DEAD, SHOOTING }
     private float constantSpeed = 100f;
 
     Sprite sprite;
@@ -27,19 +29,26 @@ public class FlyingEnemy {
     private Animation dyingAnimation;
 
     //Enemy Shooting
-    private final Texture shootingTexture = new Texture("air_enemy/dying.png"); //Set here to stop lag from loading texture from drive
+    private final Texture shootingTexture = new Texture("air_enemy/shooting.png"); //Set here to stop lag from loading texture from drive
     private Animation shootingAnimation;
+    boolean isShooting;
+    boolean alreadyShot;
+
+    //Bombs
+    ArrayList<FlyingEnemyProjectile> bombs;
 
     float stateTime;
 
     EnemyState enemyState;
 
-    public FlyingEnemy(float x, float y) {
+    public FlyingEnemy(float x, float y, ArrayList<FlyingEnemyProjectile> bombs) {
         enemyState = EnemyState.MOVING;
         stateTime = 0.0f;
 
         sprite = new Sprite();
         delta = new Vector2();
+
+        this.bombs = bombs;
 
         //Walking
         int frameCol = 6;
@@ -87,6 +96,9 @@ public class FlyingEnemy {
         }
         shootingAnimation = new Animation(1f/30f, (Object[]) shootingFrames);
 
+        isShooting = false;
+        alreadyShot = false;
+
         sprite.setPosition(x, y);
     }
 
@@ -115,16 +127,47 @@ public class FlyingEnemy {
                 //make enemy move at the speed of the ground when dead
                 constantSpeed = ((Player.getConstantSpeed() + (gameMap.timeElapsed * 1f)) * 0.05f) / Gdx.graphics.getDeltaTime();
                 break;
+
+            case SHOOTING:
+                currentFrame = (TextureRegion) shootingAnimation.getKeyFrame(stateTime, false);
+                if(shootingAnimation.isAnimationFinished(stateTime)) {
+                    enemyState = EnemyState.MOVING;
+                    isShooting = false;
+                    alreadyShot = false;
+                    break;
+                }
+                sprite.setRegion(currentFrame);
+                //Deploys bomb at frame 12 of shooting animation
+                if(shootingAnimation.getKeyFrameIndex(stateTime) == 9 && !alreadyShot) {
+                    alreadyShot = true;
+                    bombs.add(new FlyingEnemyProjectile(getHitBox().getX() + getHitBox().getWidth() / 2,
+                            getHitBox().getY()));
+                }
+                break;
         }
     }
 
-    public void Move(float dt) {
+    public void move(float dt, Player player) {
+        if(isShooting) return;
+        if(getHitBox().getX() < player.getHitBox().getX()
+                && getHitBox().getX() + getHitBox().getWidth() > player.getHitBox().getX() + player.getHitBox().getWidth()) {
+
+            shoot();
+            return;
+        }
         this.delta.x = constantSpeed * dt;
         sprite.translate(delta.x, delta.y);
         if(enemyState == EnemyState.DYING) {
             sprite.translateY(-5f);
         }
 
+    }
+
+    public void shoot() {
+        if(isShooting) return;
+        stateTime = 0f;
+        isShooting = true;
+        enemyState = EnemyState.SHOOTING;
     }
 
     public Rectangle getHitBox() {
