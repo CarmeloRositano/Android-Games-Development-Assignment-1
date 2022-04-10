@@ -51,7 +51,7 @@ public class TiledGameMap extends Widget {
         mapLayers.get("Ground").setOffsetX((camera.position.x - camera.viewportWidth) - groundOffset);
         mapLayers.get("Background").setOffsetX((camera.position.x - camera.viewportWidth) - backgroundOffset);
 
-        if (player.currentPlayerState == Player.PlayerState.DEAD) return;
+        if (player.currentState == Player.PlayerState.DEAD) return;
 
         //Increment Offset
         sunOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.00001f;

@@ -26,24 +26,21 @@ public class Player {
     boolean isShooting;
     boolean canJump;
 
-    PlayerState currentPlayerState;
+    PlayerState currentState;
 
-    Sprite playerSprite;
-
-    Texture playerTexture;
-    Vector2 playerDelta;
-    Rectangle playerDeltaRectangle;
+    Sprite sprite;
+    Vector2 delta;
 
     //Player - Walking
-    Texture playerWalkingTexture;
-    private Animation<TextureRegion> playerWalkingAnimation;
+    Texture walkingTexture;
+    private Animation<TextureRegion> walkingAnimation;
     //Dying
-    Texture playerDyingTexture;
-    private Animation<TextureRegion> playerDyingAnimation;
+    Texture dyingTexture;
+    private Animation<TextureRegion> dyingAnimation;
     //Shooting
-    Texture playerShootingTexture;
+    Texture shootingTexture;
+    private Animation shootingAnimation;
     ArrayList<PlayerProjectile> bullets;
-    private Animation playerShootingAnimation;
 
     //Game Clock
     float dt;
@@ -52,55 +49,54 @@ public class Player {
 
 
     public Player(ArrayList<PlayerProjectile> bullets) {
-        currentPlayerState = PlayerState.RUNNING;
+        currentState = PlayerState.RUNNING;
 
         shapeRenderer = new ShapeRenderer();
 
         this.bullets = bullets;
 
-        playerSprite = new Sprite();
-        playerSprite.setSize(256,256);
-        playerDelta = new Vector2();
-        playerDeltaRectangle = new Rectangle(playerSprite.getX(), playerSprite.getY(), playerSprite.getWidth(), playerSprite.getHeight());
+        sprite = new Sprite();
+        sprite.setSize(256,256);
+        delta = new Vector2();
 
         //Player Walking Texture and Animation Build
         int FrameCol = 3;
         int FrameRow = 6;
-        playerWalkingTexture = new Texture("player/moving.png");
-        TextureRegion[][] walkTemp = TextureRegion.split(playerWalkingTexture, playerWalkingTexture.getWidth() / FrameCol,
-                playerWalkingTexture.getHeight() / FrameRow);
-        TextureRegion[] playerWalkingFrames = new TextureRegion[FrameCol * FrameRow];
+        walkingTexture = new Texture("player/moving.png");
+        TextureRegion[][] walkTemp = TextureRegion.split(walkingTexture, walkingTexture.getWidth() / FrameCol,
+                walkingTexture.getHeight() / FrameRow);
+        TextureRegion[] walkingFrames = new TextureRegion[FrameCol * FrameRow];
         int index = 0;
         for (int i = 0; i < FrameRow; i++) {
             for (int j = 0; j < FrameCol; j++) {
-                playerWalkingFrames[index++] = walkTemp[i][j];
+                walkingFrames[index++] = walkTemp[i][j];
             }
         }
-        playerWalkingAnimation = new Animation(1f/30f, (Object[]) playerWalkingFrames);
+        walkingAnimation = new Animation(1f/30f, (Object[]) walkingFrames);
 
         //Player Dying Texture and Animation Build
         FrameCol = 5;
         FrameRow = 4;
-        playerDyingTexture = new Texture("player/dying.png");
-        TextureRegion[][] dyingTemp = TextureRegion.split(playerDyingTexture, playerDyingTexture.getWidth() / FrameCol,
-                playerDyingTexture.getHeight() / FrameRow);
-        TextureRegion[] playerDyingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
+        dyingTexture = new Texture("player/dying.png");
+        TextureRegion[][] dyingTemp = TextureRegion.split(dyingTexture, dyingTexture.getWidth() / FrameCol,
+                dyingTexture.getHeight() / FrameRow);
+        TextureRegion[] dyingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
         index = 0;
         for (int i = 0; i < FrameRow; i++) {
             for (int j = 0; j < FrameCol; j++) {
                 if(index < 18) {
-                    playerDyingFrames[index++] = dyingTemp[i][j];
+                    dyingFrames[index++] = dyingTemp[i][j];
                 }
             }
         }
-        playerDyingAnimation = new Animation(1f/30f, (Object[]) playerDyingFrames);
+        dyingAnimation = new Animation(1f/30f, (Object[]) dyingFrames);
 
         //player shooting Texture and Animation Build
         FrameCol = 3;
         FrameRow = 4;
-        playerShootingTexture = new Texture("player/shooting.png");
-        TextureRegion[][] shootingTemp = TextureRegion.split(playerShootingTexture, playerShootingTexture.getWidth() / FrameCol,
-                playerShootingTexture.getHeight() / FrameRow);
+        shootingTexture = new Texture("player/shooting.png");
+        TextureRegion[][] shootingTemp = TextureRegion.split(shootingTexture, shootingTexture.getWidth() / FrameCol,
+                shootingTexture.getHeight() / FrameRow);
         TextureRegion[] playerShootingFrames = new TextureRegion[(FrameCol * FrameRow) - 2];
         index = 0;
         for (int i = 0; i < FrameRow; i++) {
@@ -110,9 +106,9 @@ public class Player {
                 }
             }
         }
-        playerShootingAnimation = new Animation (1f/30f, (Object[]) playerShootingFrames);
+        shootingAnimation = new Animation (1f/30f, (Object[]) playerShootingFrames);
 
-        updateCurrentPlayerState();
+        updateCurrentState();
 
         isShooting = false;
         canJump = false;
@@ -121,21 +117,21 @@ public class Player {
     }
 
     //Updates the currentPlayerState to determine what animation that player sprite should be in
-    public void updateCurrentPlayerState() {
+    public void updateCurrentState() {
 
         stateTime += Gdx.graphics.getDeltaTime();
 
-        switch (currentPlayerState) {
+        switch (currentState) {
             case RUNNING:
-                currentFrame = (TextureRegion) playerWalkingAnimation.getKeyFrame(stateTime, true);
-                playerSprite.setRegion(currentFrame);
+                currentFrame = (TextureRegion) walkingAnimation.getKeyFrame(stateTime, true);
+                sprite.setRegion(currentFrame);
                 break;
 
             case DYING:
-                currentFrame = (TextureRegion) playerDyingAnimation.getKeyFrame(stateTime, false);
-                playerSprite.setRegion(currentFrame);
-                if(playerDyingAnimation.isAnimationFinished(stateTime)) {
-                    currentPlayerState = PlayerState.DEAD;
+                currentFrame = (TextureRegion) dyingAnimation.getKeyFrame(stateTime, false);
+                sprite.setRegion(currentFrame);
+                if(dyingAnimation.isAnimationFinished(stateTime)) {
+                    currentState = PlayerState.DEAD;
                 }
                 break;
 
@@ -144,55 +140,54 @@ public class Player {
                 break;
 
             case SHOOTING:
-                currentFrame = (TextureRegion) playerShootingAnimation.getKeyFrame(stateTime, true);
-                playerSprite.setRegion(currentFrame);
-                if(playerShootingAnimation.isAnimationFinished(stateTime)) {
-                    currentPlayerState = PlayerState.RUNNING;
+                currentFrame = (TextureRegion) shootingAnimation.getKeyFrame(stateTime, true);
+                sprite.setRegion(currentFrame);
+                if(shootingAnimation.isAnimationFinished(stateTime)) {
+                    currentState = PlayerState.RUNNING;
                     isShooting = false;
                 };
                 break;
 
         }
-        playerSprite.setRegion(currentFrame);
+        sprite.setRegion(currentFrame);
     }
 
     //Moves the player
-    public void movePlayer(int x, int y, TiledMapTileLayer collisionLayer, Camera camera) {
+    public void Move(int x, int y, TiledMapTileLayer collisionLayer, Camera camera) {
 
         //If player is within viewport
-        if(currentPlayerState == PlayerState.DYING || currentPlayerState == PlayerState.DEAD) return;
-        if (playerSprite.getX() < camera.position.x - camera.viewportWidth * 0.5f) {
-            playerSprite.setPosition(camera.position.x - camera.viewportWidth * 0.5f, playerSprite.getY());
-            playerDelta.x = 0f;
-        } else if (playerSprite.getX() > (camera.position.x + camera.viewportWidth * 0.5f) - playerSprite.getWidth()) {
-            playerSprite.setPosition((camera.position.x + camera.viewportWidth * 0.5f) - playerSprite.getWidth(), playerSprite.getY());
-            playerDelta.x = 0f;
+        if(currentState == PlayerState.DYING || currentState == PlayerState.DEAD) return;
+        if (sprite.getX() < camera.position.x - camera.viewportWidth * 0.5f) {
+            sprite.setPosition(camera.position.x - camera.viewportWidth * 0.5f, sprite.getY());
+            delta.x = 0f;
+        } else if (sprite.getX() > (camera.position.x + camera.viewportWidth * 0.5f) - sprite.getWidth()) {
+            sprite.setPosition((camera.position.x + camera.viewportWidth * 0.5f) - sprite.getWidth(), sprite.getY());
+            delta.x = 0f;
         } else {
-            this.playerDelta.x = x * MovementSpeed * dt;
-            playerDeltaRectangle.x += (x * MovementSpeed * dt);
+            this.delta.x = x * MovementSpeed * dt;
         }
 
         if(collidesBottom(collisionLayer)) {
             //Player jump
-            if(y == 1 && currentPlayerState != PlayerState.DEAD && currentPlayerState != PlayerState.DYING) {
+            if(y == 1 && currentState != PlayerState.DEAD && currentState != PlayerState.DYING) {
                 //Mario Style arc jump
                 stateTime = 0f;
-                this.playerDelta.y = (playerSprite.getY() - this.playerDelta.y * dt) / 2;
+                this.delta.y = (sprite.getY() - this.delta.y * dt) / 2;
             } else {
-                this.playerDelta.y = y * MovementSpeed * dt;
+                this.delta.y = y * MovementSpeed * dt;
             }
         //Player is in the air (Applies gravity)
         } else {
-            this.playerDelta.y = (this.playerDelta.y - GRAVITY * dt);
+            this.delta.y = (this.delta.y - GRAVITY * dt);
         }
 
         //Make sure player does not fall into ground
-        if (playerSprite.getY() < 61) {
-            playerSprite.setPosition(playerSprite.getX(), 61);
+        if (sprite.getY() < 61) {
+            sprite.setPosition(sprite.getX(), 61);
             //TODO Fix issue where player character would fall into ground after jump. Now has hard coded possition (61)
         }
 
-        playerSprite.translate(this.playerDelta.x, this.playerDelta.y);
+        sprite.translate(this.delta.x, this.delta.y);
     }
     private boolean isCellBlocked(float x, float y, TiledMapTileLayer collisionLayer) {
         TiledMapTileLayer.Cell cell = collisionLayer.getCell((int) (x / collisionLayer.getTileWidth()), (int) (y / collisionLayer.getTileHeight()));
@@ -200,8 +195,8 @@ public class Player {
     }
 
     public boolean collidesBottom(TiledMapTileLayer collisionLayer) {
-        for(float step = 0; step < playerSprite.getWidth(); step += collisionLayer.getTileWidth() / 2f) {
-            if(isCellBlocked(playerSprite.getX() + step, playerSprite.getY(), collisionLayer)) {
+        for(float step = 0; step < sprite.getWidth(); step += collisionLayer.getTileWidth() / 2f) {
+            if(isCellBlocked(sprite.getX() + step, sprite.getY(), collisionLayer)) {
                 return true;
             }
         }
@@ -209,28 +204,28 @@ public class Player {
     }
 
     public Rectangle getHitBox() {
-        return new Rectangle(playerSprite.getX() + playerSprite.getWidth() * 0.3f,
-                playerSprite.getY(),
-                playerSprite.getWidth() * 0.54f,
-                playerSprite.getHeight() * 0.8f);
+        return new Rectangle(sprite.getX() + sprite.getWidth() * 0.3f,
+                sprite.getY(),
+                sprite.getWidth() * 0.54f,
+                sprite.getHeight() * 0.8f);
     }
 
     public void shoot() {
         if(isShooting) return;
         if(bullets.size() == 4) return;
-        bullets.add(new PlayerProjectile(playerSprite.getX() + playerSprite.getWidth() * 0.8f, (playerSprite.getY()) + (playerSprite.getHeight() * 0.42f)));
+        bullets.add(new PlayerProjectile(sprite.getX() + sprite.getWidth() * 0.8f, (sprite.getY()) + (sprite.getHeight() * 0.42f)));
         stateTime = 0f;
-        currentPlayerState = PlayerState.SHOOTING;
+        currentState = PlayerState.SHOOTING;
         isShooting = true;
     }
 
     public void setDying() {
-        currentPlayerState = PlayerState.DYING;
+        currentState = PlayerState.DYING;
         stateTime = 0f;
     }
 
     public void setAlive() {
-        currentPlayerState = PlayerState.RUNNING;
+        currentState = PlayerState.RUNNING;
         stateTime = 0f;
     }
 
@@ -240,9 +235,9 @@ public class Player {
     }
 
     public void dispose() {
-        playerWalkingTexture.dispose();
-        playerDyingTexture.dispose();
-        playerShootingTexture.dispose();
+        walkingTexture.dispose();
+        dyingTexture.dispose();
+        shootingTexture.dispose();
         shapeRenderer.dispose();
     }
 

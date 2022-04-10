@@ -13,7 +13,7 @@ import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -40,6 +40,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	//Enemy
 	GroundEnemy groundEnemy;
+	FlyingEnemy flyingEnemy;
 	Random rand;
 
 	//Bullet
@@ -144,16 +145,18 @@ public class MyGdxGame extends ApplicationAdapter {
 		gameMap.render(camera, gameState, player);
 
 		//Player
-		player.updateCurrentPlayerState();
+		player.updateCurrentState();
 
 		//Enemy
 		groundEnemy.updateCurrentState(gameMap);
+		flyingEnemy.updateCurrentState(gameMap);
 
 		//Apply camera and draw player
 		batch.setProjectionMatrix(camera.combined);
 		groundEnemy.draw(batch);
+		flyingEnemy.draw(batch);
 		batch.begin();
-		player.playerSprite.draw(batch);
+		player.sprite.draw(batch);
 		batch.end();
 
 		//Render Bullets
@@ -215,6 +218,7 @@ public class MyGdxGame extends ApplicationAdapter {
 						&& gameState == GameState.MAIN_MENU) {
 					player.dispose();
 					groundEnemy.dispose();
+					flyingEnemy.dispose();
 					for (int i = 0; i < bullets.size(); i++) {
 						bullets.get(i).dispose();
 						bullets.remove(i);
@@ -231,14 +235,14 @@ public class MyGdxGame extends ApplicationAdapter {
 				MapLayer collisionLayer = gameMap.tiledMap.getLayers().get("collision");
 				TiledMapTileLayer tileLayer = (TiledMapTileLayer) collisionLayer;
 
-				//Update Ground Enemy
+				//Update Enemies - Ground Enemy
 				//Determine when to spawn enemy
-				if(groundEnemy.groundEnemySprite.getX() < Gdx.graphics.getWidth() - groundEnemy.groundEnemySprite.getWidth()) {
-					//Stop enemy from moving if player is dead and enemy is outside viewport
+				if(groundEnemy.sprite.getX() < Gdx.graphics.getWidth() - groundEnemy.sprite.getWidth()) {
 					groundEnemy.setAlive();
-					groundEnemy.groundEnemySprite.setPosition((player.playerSprite.getX() + Gdx.graphics.getWidth() + groundEnemy.groundEnemySprite.getWidth()) + rand.nextInt(1000), 61);
+					groundEnemy.sprite.setPosition((player.sprite.getX() + Gdx.graphics.getWidth() + groundEnemy.sprite.getWidth()) + rand.nextInt(1000),
+												   61);
 				} else {
-					groundEnemy.groundEnemyMovement(Gdx.graphics.getDeltaTime());
+					groundEnemy.Move(Gdx.graphics.getDeltaTime());
 				}
 
 				//Update Player Bullets
@@ -250,22 +254,47 @@ public class MyGdxGame extends ApplicationAdapter {
 					}
 				}
 
+				//Flying Enemy
+				if(flyingEnemy.sprite.getX() > camera.position.x + flyingEnemy.sprite.getWidth() * 2f) {
+					flyingEnemy.setAlive();
+					flyingEnemy.sprite.setPosition((player.sprite.getX() - Gdx.graphics.getWidth() - flyingEnemy.sprite.getWidth() - rand.nextInt(1000)),
+													61 + player.sprite.getHeight() * 2f);
+				} else {
+					flyingEnemy.Move(Gdx.graphics.getDeltaTime());
+				}
 
-				//Collision Checks
-				if (groundEnemy.groundEnemyState == GroundEnemy.GroundEnemyState.MOVING) {
+
+				//Collision Checks - Ground Enemy
+				if (groundEnemy.enemyState == GroundEnemy.EnemyState.MOVING) {
 					//Checking if bullets collide with enemy
 					for (int i = 0; i < bullets.size(); i++) {
 						if(bullets.get(i).getHitBox().overlaps(groundEnemy.getHitBox())) {
-							System.out.println("ENEMY HIT!");
 							groundEnemy.setDying();
 							bullets.remove(i);
 							i--;
 						}
 					}
-
 					//Checking if enemy collides with player
-					if(player.currentPlayerState == Player.PlayerState.RUNNING) {
+					if(player.currentState == Player.PlayerState.RUNNING) {
 						if(groundEnemy.getHitBox().overlaps(player.getHitBox())) {
+							player.setDying();
+							gameState = GameState.COMPLETE;
+						}
+					}
+				}
+				//Flying Enemy
+				if (flyingEnemy.enemyState == FlyingEnemy.EnemyState.MOVING) {
+					//Checking if bullets collide with enemy
+					for (int i = 0; i < bullets.size(); i++) {
+						if(bullets.get(i).getHitBox().overlaps(flyingEnemy.getHitBox())) {
+							flyingEnemy.setDying();
+							bullets.remove(i);
+							i--;
+						}
+					}
+					//Checking if enemy collides with player
+					if(player.currentState == Player.PlayerState.RUNNING) {
+						if(flyingEnemy.getHitBox().overlaps(player.getHitBox())) {
 							player.setDying();
 							gameState = GameState.COMPLETE;
 						}
@@ -303,7 +332,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				}
 
 				//Character and Camera Movement
-				player.movePlayer(moveX, moveY, tileLayer, camera);
+				player.Move(moveX, moveY, tileLayer, camera);
 				camera.update();
 				break;
 
@@ -319,12 +348,22 @@ public class MyGdxGame extends ApplicationAdapter {
 				}
 
 				//Update Ground Enemy
-				if(player.currentPlayerState == Player.PlayerState.DEAD
-				|| player.currentPlayerState == Player.PlayerState.DYING) {
-					if (groundEnemy.groundEnemySprite.getX() < Gdx.graphics.getWidth() - groundEnemy.groundEnemySprite.getWidth()) {
-						groundEnemy.groundEnemyMovement(0f);
+				if(player.currentState == Player.PlayerState.DEAD
+				|| player.currentState == Player.PlayerState.DYING) {
+					if (groundEnemy.sprite.getX() < Gdx.graphics.getWidth() - groundEnemy.sprite.getWidth()) {
+						groundEnemy.Move(0f);
 					} else {
-						groundEnemy.groundEnemyMovement(Gdx.graphics.getDeltaTime() * 4f);
+						groundEnemy.Move(Gdx.graphics.getDeltaTime() * 4f);
+					}
+				}
+
+				//Update flying enemy
+				if(player.currentState == Player.PlayerState.DEAD
+						|| player.currentState == Player.PlayerState.DYING) {
+					if (flyingEnemy.sprite.getX() < Gdx.graphics.getWidth() - flyingEnemy.sprite.getWidth()) {
+						flyingEnemy.Move(0f);
+					} else {
+						flyingEnemy.Move(Gdx.graphics.getDeltaTime() * 4f);
 					}
 				}
 
@@ -340,6 +379,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown
 						&& gameState == GameState.COMPLETE) {
 					player.dispose();
+					flyingEnemy.dispose();
 					groundEnemy.dispose();
 					for (int i = 0; i < bullets.size(); i++) {
 						bullets.get(i).dispose();
@@ -363,12 +403,14 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		//Set player and camera starting location
 		RectangleMapObject playerObject = (RectangleMapObject) objectLayer.getObjects().get("Player");
-		player.playerSprite.setCenter(playerObject.getRectangle().x, (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
-		camera.position.x = player.playerSprite.getX() + player.playerSprite.getWidth()/2;
+		player.sprite.setCenter(playerObject.getRectangle().x, (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
+		camera.position.x = player.sprite.getX() + player.sprite.getWidth()/2;
 		camera.position.y = (1080 / 2) - 1080 * 0.1f ;
 
 		//Enemy
-		groundEnemy = new GroundEnemy(player.playerSprite.getX() + Gdx.graphics.getWidth() * 1.5f, player.playerSprite.getY());
+		groundEnemy = new GroundEnemy(player.sprite.getX() + Gdx.graphics.getWidth() * 1.5f, player.sprite.getY());
+		flyingEnemy = new FlyingEnemy(player.sprite.getX() + -Gdx.graphics.getWidth() * 2f,
+				61 + player.sprite.getHeight() * 2f);
 
 		camera.update();
 
@@ -379,6 +421,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		shapeRenderer.setProjectionMatrix(camera.combined);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(0,1,0,1);
+		shapeRenderer.rect(flyingEnemy.getHitBox().getX(), flyingEnemy.getHitBox().getY(),
+				flyingEnemy.getHitBox().getWidth(), flyingEnemy.getHitBox().getHeight());
 		shapeRenderer.rect(groundEnemy.getHitBox().getX(), groundEnemy.getHitBox().getY(),
 				groundEnemy.getHitBox().getWidth(), groundEnemy.getHitBox().getHeight());
 		shapeRenderer.rect(player.getHitBox().getX(), player.getHitBox().getY(),

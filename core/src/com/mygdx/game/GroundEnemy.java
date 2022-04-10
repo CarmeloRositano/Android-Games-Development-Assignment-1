@@ -1,7 +1,6 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -12,65 +11,63 @@ import com.badlogic.gdx.math.Vector2;
 
 public class GroundEnemy{
 
-    public enum GroundEnemyState { MOVING, DYING, DEAD }
+    public enum EnemyState { MOVING, DYING, DEAD }
     private float constantSpeed = 100f;
 
-    Sprite groundEnemySprite;
-    Vector2 groundEnemyDelta;
+    Sprite sprite;
+    Vector2 delta;
     private TextureRegion currentFrame;
 
     //Enemy Walking
-    private final Texture groundEnemyWalkingTexture = new Texture("ground_enemy/moving.png"); //Set here to stop lag from loading texture from drive
-    private TextureRegion[] groundEnemyWalkingFrames;
-    private Animation groundEnemyWalkingAnimation;
+    private final Texture walkingTexture = new Texture("ground_enemy/moving.png"); //Set here to stop lag from loading texture from drive
+    private Animation walkingAnimation;
 
     //Enemy Dying
-    private final Texture groundEnemyDyingTexture = new Texture("ground_enemy/dying.png"); //Set here to stop lag from loading texture from drive
-    private TextureRegion[] groundEnemyDyingFrames;
-    private Animation groundEnemyDyingAnimation;
+    private final Texture dyingTexture = new Texture("ground_enemy/dying.png"); //Set here to stop lag from loading texture from drive
+    private Animation dyingAnimation;
     float stateTime;
 
-    GroundEnemyState groundEnemyState;
+    EnemyState enemyState;
     public GroundEnemy(float x, float y) {
-        groundEnemyState = GroundEnemyState.MOVING;
+        enemyState = EnemyState.MOVING;
         stateTime = 0.0f;
 
-        groundEnemySprite = new Sprite();
-        groundEnemyDelta = new Vector2();
+        sprite = new Sprite();
+        delta = new Vector2();
 
         //Walking
         int frameCol = 6;
         int frameRow = 3;
 
-        groundEnemySprite.setSize(groundEnemyWalkingTexture.getWidth() / frameCol * 0.7f
-                ,groundEnemyWalkingTexture.getHeight() / frameRow * 0.7f);
+        sprite.setSize(walkingTexture.getWidth() / frameCol * 0.7f
+                , walkingTexture.getHeight() / frameRow * 0.7f);
 
-        TextureRegion[][] walkTemp = TextureRegion.split(groundEnemyWalkingTexture, groundEnemyWalkingTexture.getWidth() / frameCol,
-                groundEnemyWalkingTexture.getHeight() / frameRow);
-        groundEnemyWalkingFrames = new TextureRegion[frameCol * frameRow];
+        TextureRegion[][] walkTemp = TextureRegion.split(walkingTexture, walkingTexture.getWidth() / frameCol,
+                walkingTexture.getHeight() / frameRow);
+        TextureRegion[] walkingFrames = new TextureRegion[frameCol * frameRow];
         int index = 0;
         for (int i = 0; i < frameRow; i++) {
             for (int j = 0; j < frameCol; j++) {
-                groundEnemyWalkingFrames[index++] = walkTemp[i][j];
+                walkingFrames[index++] = walkTemp[i][j];
             }
         }
-        groundEnemyWalkingAnimation = new Animation(1f/30f, (Object[]) groundEnemyWalkingFrames);
+        walkingAnimation = new Animation(1f/30f, (Object[]) walkingFrames);
         //Dying
         frameCol = 6;
         frameRow = 5;
-        TextureRegion[][] dyingTemp = TextureRegion.split(groundEnemyDyingTexture, groundEnemyDyingTexture.getWidth() / frameCol,
-                groundEnemyDyingTexture.getHeight() / frameRow);
-        groundEnemyDyingFrames = new TextureRegion[(frameCol * frameRow) - 4];
+        TextureRegion[][] dyingTemp = TextureRegion.split(dyingTexture, dyingTexture.getWidth() / frameCol,
+                dyingTexture.getHeight() / frameRow);
+        TextureRegion[] dyingFrames = new TextureRegion[(frameCol * frameRow) - 4];
        index = 0;
         for (int i = 0; i < frameRow; i++) {
             for (int j = 0; j < frameCol; j++) {
                 if(index < 26)
-                groundEnemyDyingFrames[index++] = dyingTemp[i][j];
+                dyingFrames[index++] = dyingTemp[i][j];
             }
         }
-        groundEnemyDyingAnimation = new Animation(1f/30f, (Object[]) groundEnemyDyingFrames);
+        dyingAnimation = new Animation(1f/30f, (Object[]) dyingFrames);
 
-        groundEnemySprite.setPosition(x, y);
+        sprite.setPosition(x, y);
 
     }
 
@@ -78,21 +75,21 @@ public class GroundEnemy{
 
         stateTime += Gdx.graphics.getDeltaTime();
 
-        switch (groundEnemyState) {
+        switch (enemyState) {
             case MOVING:
-                currentFrame = (TextureRegion) groundEnemyWalkingAnimation.getKeyFrame(stateTime, true);
-                groundEnemySprite.setRegion(currentFrame);
+                currentFrame = (TextureRegion) walkingAnimation.getKeyFrame(stateTime, true);
+                sprite.setRegion(currentFrame);
                 break;
 
             case DYING:
-                currentFrame = (TextureRegion) groundEnemyDyingAnimation.getKeyFrame(stateTime, false);
-                if(groundEnemyDyingAnimation.isAnimationFinished(stateTime)) {
-                    groundEnemyState = GroundEnemyState.DEAD;
+                currentFrame = (TextureRegion) dyingAnimation.getKeyFrame(stateTime, false);
+                if(dyingAnimation.isAnimationFinished(stateTime)) {
+                    enemyState = EnemyState.DEAD;
                     //make enemy move at the speed of the ground when dead
                     constantSpeed = ((Player.getConstantSpeed() + (gameMap.timeElapsed * 1f)) * 0.05f) / Gdx.graphics.getDeltaTime();
                     break;
                 }
-                groundEnemySprite.setRegion(currentFrame);
+                sprite.setRegion(currentFrame);
                 break;
 
             case DEAD:
@@ -102,43 +99,43 @@ public class GroundEnemy{
         }
     }
 
-    public void groundEnemyMovement(float dt) {
-        this.groundEnemyDelta.x = -constantSpeed * dt;
-        groundEnemySprite.translate(groundEnemyDelta.x, groundEnemyDelta.y);
-        if(groundEnemyState == GroundEnemyState.DYING) {
-            groundEnemySprite.translateY(-0.8f);
+    public void Move(float dt) {
+        this.delta.x = -constantSpeed * dt;
+        sprite.translate(delta.x, delta.y);
+        if(enemyState == EnemyState.DYING) {
+            sprite.translateY(-0.8f);
         }
 
     }
 
     public Rectangle getHitBox() {
-        return new Rectangle(groundEnemySprite.getX() + groundEnemySprite.getWidth() * 0.15f,
-                groundEnemySprite.getY(),
-                groundEnemySprite.getWidth() * 0.7f,
-                groundEnemySprite.getHeight() * 0.6f);
+        return new Rectangle(sprite.getX() + sprite.getWidth() * 0.15f,
+                sprite.getY(),
+                sprite.getWidth() * 0.7f,
+                sprite.getHeight() * 0.6f);
     }
 
 
     public void draw(SpriteBatch batch) {
         batch.begin();
-        groundEnemySprite.draw(batch);
+        sprite.draw(batch);
         batch.end();
     }
 
     public void setDying() {
-        groundEnemyState = GroundEnemyState.DYING;
+        enemyState = EnemyState.DYING;
         stateTime = 0f;
     }
 
     public void setAlive() {
-        groundEnemyState = GroundEnemyState.MOVING;
+        enemyState = EnemyState.MOVING;
         stateTime = 0f;
         constantSpeed = 100f;
     }
 
     public void dispose() {
-        groundEnemyDyingTexture.dispose();
-        groundEnemyWalkingTexture.dispose();
+        dyingTexture.dispose();
+        walkingTexture.dispose();
     }
 
 }
