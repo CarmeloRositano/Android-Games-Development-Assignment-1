@@ -31,7 +31,7 @@ public class PlayerProjectile {
 
     public void move(float dt) {
         this.delta.x = BULLET_SPEED * dt;
-        this.delta.y -= (GRAVITY * dt);
+        this.delta.y -= (GRAVITY * dt) / 2;
 
         sprite.translate(this.delta.x, this.delta.y);
 

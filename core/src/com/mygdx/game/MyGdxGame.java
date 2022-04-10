@@ -1,8 +1,11 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Audio;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -25,6 +28,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	GameState gameState;
 
 	TiledGameMap gameMap;
+
+	//Audio
+	Music mainMenu;
+	Music gamePlay;
 
 	//Map and Rendering
 	SpriteBatch batch;
@@ -85,6 +92,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		rand = new Random();
 
 		shapeRenderer = new ShapeRenderer();
+
+		//Music
+		mainMenu = Gdx.audio.newMusic(Gdx.files.internal("sounds/menu.mp3"));
+		mainMenu.setVolume(.2f);
+		mainMenu.setLooping(true);
+		gamePlay = Gdx.audio.newMusic(Gdx.files.internal("sounds/gameplay.mp3"));
+		gamePlay.setVolume(.2f);
+		gamePlay.setLooping(true);
 
 		//Camera
 		float w = Gdx.graphics.getWidth();
@@ -217,13 +232,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		switch(gameState) {
 
 			case MAIN_MENU:
+				mainMenu.play();
 				startButton.update(checkTouch, touchX, touchY);
 				exitButton.update(checkTouch, touchX, touchY);
 
 				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || startButton.isDownPrev && !startButton.isDown
 					&& gameState == GameState.MAIN_MENU) {
 					gameState = GameState.PLAYING;
-
+					mainMenu.stop();
 				}
 				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown
 						&& gameState == GameState.MAIN_MENU) {
@@ -246,6 +262,9 @@ public class MyGdxGame extends ApplicationAdapter {
 				break;
 
 			case PLAYING:
+
+				//Play Music
+				gamePlay.play();
 
 				//Update Player Bullets
 				for (int i = 0; i < bullets.size(); i++) {

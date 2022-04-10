@@ -150,7 +150,8 @@ public class FlyingEnemy {
     public void move(float dt, Player player) {
         if(isShooting) return;
         if(getHitBox().getX() < player.getHitBox().getX()
-                && getHitBox().getX() + getHitBox().getWidth() > player.getHitBox().getX() + player.getHitBox().getWidth()) {
+                && getHitBox().getX() + getHitBox().getWidth() > player.getHitBox().getX() + player.getHitBox().getWidth()
+                && player.currentState != Player.PlayerState.DEAD) {
 
             shoot();
             return;
