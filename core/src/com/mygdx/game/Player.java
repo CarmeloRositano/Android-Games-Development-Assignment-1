@@ -292,7 +292,7 @@ public class Player {
 
     /**
      * Getter for constant speed
-     * @return ConstantSpeed
+     * @return
      */
     public static float getConstantSpeed() {
         return ConstantSpeed;

@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -29,7 +30,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	TiledGameMap gameMap;
 
 	//Audio
-	Music mainMenu, gamePlay, dead;
+	Music mainMenu, gamePlay, deadMenu;
+	Sound dying;
 
 	//Map and Rendering
 	SpriteBatch batch, uiBatch;
@@ -83,13 +85,15 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		shapeRenderer = new ShapeRenderer();
 
+		dying = Gdx.audio.newSound(Gdx.files.internal("sounds/dying.mp3"));
+
 		//Music
 		mainMenu = Gdx.audio.newMusic(Gdx.files.internal("sounds/menu.mp3"));
 		mainMenu.setLooping(true);
 		gamePlay = Gdx.audio.newMusic(Gdx.files.internal("sounds/gameplay.mp3"));
 		gamePlay.setLooping(true);
-		dead = Gdx.audio.newMusic(Gdx.files.internal("sounds/dead.mp3"));
-		dead.setLooping(true);
+		deadMenu = Gdx.audio.newMusic(Gdx.files.internal("sounds/dead.mp3"));
+		deadMenu.setLooping(true);
 
 		//Camera
 		float w = Gdx.graphics.getWidth();
@@ -273,7 +277,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				break;
 			case PLAYING:
 				//Music
-				dead.stop();
+				deadMenu.stop();
 				gamePlay.play();
 
 				//Update Player Bullets
@@ -321,6 +325,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					for (int i = 0; i < bullets.size(); i++) {
 						if(bullets.get(i).getHitBox().overlaps(groundEnemy.getHitBox())) {
 							groundEnemy.setDying();
+							dying.setVolume(dying.play(), 0.2f);
 							bullets.remove(i);
 							score += 50f;
 							i--;
@@ -330,6 +335,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					if(player.currentState == Player.PlayerState.RUNNING) {
 						if(groundEnemy.getHitBox().overlaps(player.getHitBox())) {
 							player.setDying();
+							dying.setVolume(dying.play(), 0.2f);
 							gameState = GameState.COMPLETE;
 						}
 					}
@@ -340,6 +346,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					//Checking if bullets collide with enemy
 					for (int i = 0; i < bullets.size(); i++) {
 						if(bullets.get(i).getHitBox().overlaps(flyingEnemy.getHitBox())) {
+							dying.setVolume(dying.play(), 0.2f);
 							flyingEnemy.setDying();
 							bullets.remove(i);
 							score += 100f;
@@ -349,6 +356,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					//Checking if enemy collides with player
 					if(player.currentState == Player.PlayerState.RUNNING) {
 						if(flyingEnemy.getHitBox().overlaps(player.getHitBox())) {
+							dying.setVolume(dying.play(), 0.2f);
 							player.setDying();
 							gameState = GameState.COMPLETE;
 						}
@@ -358,6 +366,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				//Check bomb collision with player
 				for (int i = 0; i < bombs.size(); i++) {
 					if(bombs.get(i).getHitBox().overlaps(player.getHitBox())) {
+						dying.setVolume(dying.play(), 0.2f);
 						player.setDying();
 						gameState = GameState.COMPLETE;
 					}
@@ -435,8 +444,8 @@ public class MyGdxGame extends ApplicationAdapter {
 				break;
 			case COMPLETE:
 				gamePlay.stop();
-				dead.setVolume(.2f);
-				dead.play();
+				deadMenu.setVolume(.2f);
+				deadMenu.play();
 
 				//Applies gravity to player when they die
 				player.move(0,0,tileLayer, camera);
@@ -585,6 +594,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		font.dispose();
 		mainMenu.dispose();
 		gamePlay.dispose();
-		dead.dispose();
+		deadMenu.dispose();
 	}
 }

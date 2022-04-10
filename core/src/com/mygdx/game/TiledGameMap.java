@@ -86,7 +86,7 @@ public class TiledGameMap extends Widget {
     public void newGame() {
         timeElapsed = 0f;
     }
-    
+
     /**
      * Dispose of variables
      */
