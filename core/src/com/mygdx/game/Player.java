@@ -34,13 +34,13 @@ public class Player {
 
     //Player - Walking
     Texture walkingTexture;
-    private Animation<TextureRegion> walkingAnimation;
+    private final Animation<TextureRegion> walkingAnimation;
     //Dying
     Texture dyingTexture;
-    private Animation<TextureRegion> dyingAnimation;
+    private final Animation<TextureRegion> dyingAnimation;
     //Shooting
     Texture shootingTexture;
-    private Animation shootingAnimation;
+    private final Animation<TextureRegion> shootingAnimation;
     ArrayList<PlayerProjectile> bullets;
     Sound shoot;
 
@@ -112,8 +112,6 @@ public class Player {
         }
         shootingAnimation = new Animation (1f/30f, (Object[]) playerShootingFrames);
 
-        updateCurrentState();
-
         isShooting = false;
         canJump = false;
         dt = 0.0f;
@@ -121,8 +119,8 @@ public class Player {
     }
 
     //Updates the currentPlayerState to determine what animation that player sprite should be in
-    public void updateCurrentState() {
-
+    public void updateCurrentState(MyGdxGame.GameState gameState) {
+        if(gameState == MyGdxGame.GameState.PAUSED) return;
         stateTime += Gdx.graphics.getDeltaTime();
 
         switch (currentState) {
@@ -149,7 +147,7 @@ public class Player {
                 if(shootingAnimation.isAnimationFinished(stateTime)) {
                     currentState = PlayerState.RUNNING;
                     isShooting = false;
-                };
+                }
                 break;
 
         }
@@ -187,7 +185,6 @@ public class Player {
         //Make sure player does not fall into ground
         if (sprite.getY() < 61) {
             sprite.setPosition(sprite.getX(), 61);
-            //TODO Fix issue where player character would fall into ground after jump. Now has hard coded possition (61)
         }
 
         sprite.translate(this.delta.x, this.delta.y);
@@ -243,6 +240,7 @@ public class Player {
         dyingTexture.dispose();
         shootingTexture.dispose();
         shapeRenderer.dispose();
+        shoot.dispose();
     }
 
     //Getters and Setters

@@ -18,19 +18,18 @@ public class FlyingEnemy {
 
     Sprite sprite;
     Vector2 delta;
-    private TextureRegion currentFrame;
 
     //Enemy Walking
     private final Texture walkingTexture = new Texture("air_enemy/moving.png"); //Set here to stop lag from loading texture from drive
-    private Animation walkingAnimation;
+    private final Animation<TextureRegion> walkingAnimation;
 
     //Enemy Dying
     private final Texture dyingTexture = new Texture("air_enemy/dying.png"); //Set here to stop lag from loading texture from drive
-    private Animation dyingAnimation;
+    private final Animation<TextureRegion> dyingAnimation;
 
     //Enemy Shooting
     private final Texture shootingTexture = new Texture("air_enemy/shooting.png"); //Set here to stop lag from loading texture from drive
-    private Animation shootingAnimation;
+    private final Animation<TextureRegion> shootingAnimation;
     boolean isShooting;
     boolean alreadyShot;
 
@@ -54,8 +53,8 @@ public class FlyingEnemy {
         int frameCol = 6;
         int frameRow = 3;
 
-        sprite.setSize(walkingTexture.getWidth() / frameCol * 0.9f
-                , walkingTexture.getHeight() / frameRow * 0.9f);
+        sprite.setSize(walkingTexture.getWidth() / (float) frameCol * 0.9f
+                , walkingTexture.getHeight() / (float) frameRow * 0.9f);
 
         TextureRegion[][] walkTemp = TextureRegion.split(walkingTexture, walkingTexture.getWidth() / frameCol,
                 walkingTexture.getHeight() / frameRow);
@@ -102,13 +101,13 @@ public class FlyingEnemy {
         sprite.setPosition(x, y);
     }
 
-    public void updateCurrentState(TiledGameMap gameMap) {
-
+    public void updateCurrentState(TiledGameMap gameMap, MyGdxGame.GameState gameState) {
+        if(gameState == MyGdxGame.GameState.PAUSED) return;
         stateTime += Gdx.graphics.getDeltaTime();
 
         switch (enemyState) {
             case MOVING:
-                currentFrame = (TextureRegion) walkingAnimation.getKeyFrame(stateTime, true);
+                TextureRegion currentFrame = (TextureRegion) walkingAnimation.getKeyFrame(stateTime, true);
                 sprite.setRegion(currentFrame);
                 break;
 
@@ -117,7 +116,7 @@ public class FlyingEnemy {
                 if(dyingAnimation.isAnimationFinished(stateTime)) {
                     enemyState = EnemyState.DEAD;
                     //make enemy move at the speed of the ground when dead
-                    constantSpeed = ((Player.getConstantSpeed() + (gameMap.timeElapsed * 1f)) * 0.05f) / Gdx.graphics.getDeltaTime();
+                    constantSpeed = ((Player.getConstantSpeed() + (gameMap.timeElapsed)) * 0.05f) / Gdx.graphics.getDeltaTime();
                     break;
                 }
                 sprite.setRegion(currentFrame);
@@ -126,7 +125,7 @@ public class FlyingEnemy {
             case DEAD:
                 //make enemy move at the speed of the ground when dead
                 sprite.setPosition(sprite.getX() + Gdx.graphics.getWidth(), sprite.getY());
-                constantSpeed = ((Player.getConstantSpeed() + (gameMap.timeElapsed * 1f)) * 0.05f) / Gdx.graphics.getDeltaTime();
+                constantSpeed = ((Player.getConstantSpeed() + (gameMap.timeElapsed)) * 0.05f) / Gdx.graphics.getDeltaTime();
                 break;
 
             case SHOOTING:

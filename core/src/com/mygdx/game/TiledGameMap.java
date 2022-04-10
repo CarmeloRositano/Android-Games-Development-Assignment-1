@@ -35,14 +35,16 @@ public class TiledGameMap extends Widget {
 
     public void render (OrthographicCamera camera, MyGdxGame.GameState gameState, Player player) {
 
+        tiledMapRenderer.setView(camera);
+        tiledMapRenderer.render();
+
+        if(gameState == MyGdxGame.GameState.PAUSED) return;
 
         //Speed up the player movement over time
         timeElapsed += Gdx.graphics.getDeltaTime();
         if(timeElapsed >= 1000f) timeElapsed = 1000f;
         if(gameState == MyGdxGame.GameState.MAIN_MENU) timeElapsed = 0f; //Stop game from speeding up if in menu
 
-        tiledMapRenderer.setView(camera);
-        tiledMapRenderer.render();
 
         //Parallax Effect
         mapLayers.get("Sun").setOffsetX((camera.position.x - camera.viewportWidth) - sunOffset);
@@ -54,11 +56,11 @@ public class TiledGameMap extends Widget {
         if (player.currentState == Player.PlayerState.DEAD) return;
 
         //Increment Offset
-        sunOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.00001f;
-        backgroundOffset += (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.0001f;
-        foregroundOneOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.01f;
-        foregroundTwoOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.001f;
-        groundOffset+= (Player.getConstantSpeed() + (timeElapsed * 1f)) * 0.05f;
+        sunOffset+= (Player.getConstantSpeed() + (timeElapsed)) * 0.00001f;
+        backgroundOffset += (Player.getConstantSpeed() + (timeElapsed)) * 0.0001f;
+        foregroundOneOffset+= (Player.getConstantSpeed() + (timeElapsed)) * 0.01f;
+        foregroundTwoOffset+= (Player.getConstantSpeed() + (timeElapsed)) * 0.001f;
+        groundOffset+= (Player.getConstantSpeed() + (timeElapsed)) * 0.05f;
 
         //Reset Offset (1920 Width of the section of tile map)
         if (sunOffset >= 1920) sunOffset = 0;

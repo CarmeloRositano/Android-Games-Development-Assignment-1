@@ -1,11 +1,9 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Audio;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -79,6 +77,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	Button restartButton;
 	Button startButton;
 	Button exitButton;
+	Button pauseButton;
 
 	//Menu
 	float menuDelay;
@@ -92,22 +91,17 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	@Override
 	public void create () {
-
 		rand = new Random();
 
 		shapeRenderer = new ShapeRenderer();
 
 		//Music
 		mainMenu = Gdx.audio.newMusic(Gdx.files.internal("sounds/menu.mp3"));
-		mainMenu.setVolume(.2f);
 		mainMenu.setLooping(true);
 		gamePlay = Gdx.audio.newMusic(Gdx.files.internal("sounds/gameplay.mp3"));
-		gamePlay.setVolume(.2f);
 		gamePlay.setLooping(true);
 		dead = Gdx.audio.newMusic(Gdx.files.internal("sounds/dead.mp3"));
-		dead.setVolume(.2f);
 		dead.setLooping(true);
-
 
 		//Camera
 		float w = Gdx.graphics.getWidth();
@@ -117,7 +111,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		camera.update();
 
 		//Rendering
-		bullets = new ArrayList<PlayerProjectile>();
+		bullets = new ArrayList<>();
 		batch = new SpriteBatch();
 		uiBatch = new SpriteBatch();
 		player = new Player(bullets);
@@ -140,6 +134,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		restartButton = new Button(w * 0.05f, h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonLongDownTexture);
 		startButton = new Button(w * 0.05f, h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonLongDownTexture);
 		exitButton = new Button(w - (w * 0.425f) - (w * 0.05f), h * 0.6f, w * 0.425f, h * 0.2f, buttonLongTexture, buttonLongDownTexture);
+		pauseButton = new Button(w * 0.5f - (w * 0.1f) * 0.5f, h * 0.89f, w * 0.1f, h * 0.1f, buttonSquareTexture, buttonSquareDownTexture);
 
 		menuDelay = 0f;
 
@@ -174,11 +169,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		gameMap.render(camera, gameState, player);
 
 		//Player
-		player.updateCurrentState();
+		player.updateCurrentState(gameState);
 
 		//Enemy
-		groundEnemy.updateCurrentState(gameMap);
-		flyingEnemy.updateCurrentState(gameMap);
+		groundEnemy.updateCurrentState(gameMap, gameState);
+		flyingEnemy.updateCurrentState(gameMap, gameState);
 
 		//Apply camera and draw player
 		batch.setProjectionMatrix(camera.combined);
@@ -209,6 +204,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				exitButton.addText("Exit", uiBatch);
 				break;
 			case PLAYING:
+				gamePlay.setVolume(.2f);
 				uiBatch.setColor(1, 1, 1, 0.3f);
 				font.getData().setScale(2, 2);
 				font.draw(uiBatch, "SCORE: " + (int) Math.ceil(score), 0, Gdx.graphics.getHeight());
@@ -216,6 +212,14 @@ public class MyGdxGame extends ApplicationAdapter {
 				moveRightButton.draw(uiBatch);
 				moveUpButton.draw(uiBatch);
 				shootButton.draw(uiBatch);
+				pauseButton.draw(uiBatch);
+				break;
+			case PAUSED:
+				uiBatch.setColor(1, 1, 1, 1);
+				startButton.draw(uiBatch);
+				startButton.addText("Start", uiBatch);
+				exitButton.draw(uiBatch);
+				exitButton.addText("Exit", uiBatch);
 				break;
 			case COMPLETE:
 				uiBatch.setColor(1, 1, 1, 1);
@@ -231,9 +235,6 @@ public class MyGdxGame extends ApplicationAdapter {
 				break;
 		}
 		uiBatch.end();
-
-		ESPHitBoxView();
-
 	}
 
 
@@ -250,6 +251,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		switch(gameState) {
 
 			case MAIN_MENU:
+				mainMenu.setVolume(.2f);
 				mainMenu.play();
 				startButton.update(checkTouch, touchX, touchY);
 				exitButton.update(checkTouch, touchX, touchY);
@@ -276,13 +278,12 @@ public class MyGdxGame extends ApplicationAdapter {
 						i--;
 					}
 					gameMap.dispose();
+
 					Gdx.app.exit();
 				}
 				break;
 
 			case PLAYING:
-
-
 
 				//Play Music
 				dead.stop();
@@ -380,6 +381,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				moveRightButton.update(checkTouch, touchX, touchY);
 				moveUpButton.update(checkTouch, touchX, touchY);
 				shootButton.update(checkTouch, touchX, touchY);
+				pauseButton.update(checkTouch, touchX, touchY);
 
 				int moveX = 0;
 				int moveY = 0;
@@ -404,15 +406,46 @@ public class MyGdxGame extends ApplicationAdapter {
 					shootButton.isDown = true;
 					player.shoot();
 				}
+				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || pauseButton.isDownPrev && !pauseButton.isDown
+						&& gameState == GameState.PLAYING) {
+					gameState = GameState.PAUSED;
+				}
 
 				//Character and Camera Movement
 				player.move(moveX, moveY, tileLayer, camera);
 				camera.update();
 				break;
-
+			case PAUSED:
+				gamePlay.setVolume(0.05f);
+				startButton.update(checkTouch, touchX, touchY);
+				exitButton.update(checkTouch, touchX, touchY);
+				if(Gdx.input.isKeyPressed(Input.Keys.ENTER) || startButton.isDownPrev && !startButton.isDown
+						&& gameState == GameState.PAUSED) {
+					gameState = GameState.PLAYING;
+					mainMenu.stop();
+				}
+				if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE) || exitButton.isDownPrev && !exitButton.isDown
+						&& gameState == GameState.PAUSED) {
+					player.dispose();
+					groundEnemy.dispose();
+					flyingEnemy.dispose();
+					for (int i = 0; i < bullets.size(); i++) {
+						bullets.get(i).dispose();
+						bullets.remove(i);
+						i--;
+					}
+					for ( int i = 0; i < bombs.size(); i++) {
+						bombs.get(i).dispose();
+						bombs.remove(i);
+						i--;
+					}
+					gameMap.dispose();
+					Gdx.app.exit();
+				}
+				break;
 			case COMPLETE:
-
 				gamePlay.stop();
+				dead.setVolume(.2f);
 				dead.play();
 
 				//Applies gravity to player when they die
@@ -501,11 +534,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		RectangleMapObject playerObject = (RectangleMapObject) objectLayer.getObjects().get("Player");
 		player.sprite.setCenter(playerObject.getRectangle().x, (playerObject.getRectangle().y + (playerObject.getRectangle().getHeight() * 1.12f)));
 		camera.position.x = player.sprite.getX() + player.sprite.getWidth()/2;
-		camera.position.y = (1080 / 2) - 1080 * 0.1f ;
+		camera.position.y = (1080 * 0.5f) - 1080 * 0.1f ;
 
 		//Enemy
 		groundEnemy = new GroundEnemy(player.sprite.getX() + Gdx.graphics.getWidth() * 1.5f, player.sprite.getY());
-		bombs = new ArrayList<FlyingEnemyProjectile>();
+		bombs = new ArrayList<>();
 		flyingEnemy = new FlyingEnemy(player.sprite.getX() + -Gdx.graphics.getWidth() * 2f,
 				61 + player.sprite.getHeight() * 2f, bombs);
 
@@ -543,5 +576,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		buttonLongTexture.dispose();
 		buttonLongDownTexture.dispose();
 		backgroundGround.dispose();
+		startButton.dispose();
+		moveLeftButton.dispose();
+		moveRightButton.dispose();
+		moveUpButton.dispose();
+		shootButton.dispose();
+		restartButton.dispose();
+		exitButton.dispose();
+		pauseButton.dispose();
+		font.dispose();
+		mainMenu.dispose();
+		gamePlay.dispose();
+		dead.dispose();
 	}
 }
