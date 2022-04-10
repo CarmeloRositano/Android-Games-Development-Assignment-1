@@ -203,6 +203,9 @@ public class MyGdxGame extends ApplicationAdapter {
 				moveUpButton.draw(uiBatch);
 				shootButton.draw(uiBatch);
 				pauseButton.draw(uiBatch);
+				pauseButton.addText("||", uiBatch);
+				pauseButton.font.setColor(1, 1, 1, 0.3f);
+				pauseButton.font.getData().setScale(1.5f, 1.5f);
 				break;
 			case PAUSED:
 				uiBatch.setColor(1, 1, 1, 1);
