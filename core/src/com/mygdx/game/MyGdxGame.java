@@ -32,6 +32,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	//Audio
 	Music mainMenu;
 	Music gamePlay;
+	Music dead;
 
 	//Map and Rendering
 	SpriteBatch batch;
@@ -100,6 +101,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		gamePlay = Gdx.audio.newMusic(Gdx.files.internal("sounds/gameplay.mp3"));
 		gamePlay.setVolume(.2f);
 		gamePlay.setLooping(true);
+		dead = Gdx.audio.newMusic(Gdx.files.internal("sounds/dead.mp3"));
+		dead.setVolume(.2f);
+		dead.setLooping(true);
+
 
 		//Camera
 		float w = Gdx.graphics.getWidth();
@@ -263,7 +268,10 @@ public class MyGdxGame extends ApplicationAdapter {
 
 			case PLAYING:
 
+
+
 				//Play Music
+				dead.stop();
 				gamePlay.play();
 
 				//Update Player Bullets
@@ -387,6 +395,9 @@ public class MyGdxGame extends ApplicationAdapter {
 				break;
 
 			case COMPLETE:
+
+				gamePlay.stop();
+				dead.play();
 
 				//Applies gravity to player when they die
 				player.move(0,0,tileLayer, camera);

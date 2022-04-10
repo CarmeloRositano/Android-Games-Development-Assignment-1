@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -41,6 +42,7 @@ public class Player {
     Texture shootingTexture;
     private Animation shootingAnimation;
     ArrayList<PlayerProjectile> bullets;
+    Sound shoot;
 
     //Game Clock
     float dt;
@@ -54,6 +56,8 @@ public class Player {
         shapeRenderer = new ShapeRenderer();
 
         this.bullets = bullets;
+
+        shoot = Gdx.audio.newSound(Gdx.files.internal("sounds/shoot.mp3"));
 
         sprite = new Sprite();
         sprite.setSize(256,256);
@@ -215,6 +219,7 @@ public class Player {
         bullets.add(new PlayerProjectile(sprite.getX() + sprite.getWidth() * 0.8f, (sprite.getY()) + (sprite.getHeight() * 0.42f)));
         stateTime = 0f;
         currentState = PlayerState.SHOOTING;
+        shoot.setVolume(shoot.play(), 0.2f);
         isShooting = true;
     }
 
