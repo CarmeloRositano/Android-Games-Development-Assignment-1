@@ -48,6 +48,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	//Enemy
 	GroundEnemy groundEnemy;
 	FlyingEnemy flyingEnemy;
+	Landmine landmine;
 	Random rand;
 
 	//Bullet
@@ -169,6 +170,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.setProjectionMatrix(camera.combined);
 		groundEnemy.draw(batch);
 		flyingEnemy.draw(batch);
+		landmine.draw(batch);
 		batch.begin();
 		player.sprite.draw(batch);
 		batch.end();
@@ -228,6 +230,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				break;
 		}
 		uiBatch.end();
+		ESPHitBoxView();
 	}
 
 	/**
@@ -264,6 +267,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					player.dispose();
 					groundEnemy.dispose();
 					flyingEnemy.dispose();
+					landmine.dispose();
 					for (int i = 0; i < bullets.size(); i++) {
 						bullets.get(i).dispose();
 						bullets.remove(i);
@@ -321,6 +325,17 @@ public class MyGdxGame extends ApplicationAdapter {
 					flyingEnemy.move(Gdx.graphics.getDeltaTime(), player);
 				}
 
+				System.out.println(groundEnemy.sprite.getX());
+
+				//Landmine
+				if(landmine.sprite.getX() < Gdx.graphics.getWidth() - landmine.sprite.getWidth()) {
+					landmine.sprite.setPosition(player.sprite.getX() + Gdx.graphics.getWidth() + rand.nextInt(2000) * 2f
+												, 61);
+					landmine.setAlive();
+				} else {
+					landmine.move(Gdx.graphics.getDeltaTime(), gameState);
+				}
+
 				//Collision Checks
 				//Ground Enemy
 				if (groundEnemy.enemyState == GroundEnemy.EnemyState.MOVING) {
@@ -364,6 +379,22 @@ public class MyGdxGame extends ApplicationAdapter {
 							gameState = GameState.COMPLETE;
 						}
 					}
+				}
+
+				//Landmine collision with player projectile
+				for(int i = 0; i < bullets.size(); i++) {
+					if(bullets.get(i).getHitBox().overlaps(landmine.getHitBox())) {
+						dying.setVolume(dying.play(), 0.2f);
+						landmine.setDead();
+						score += 25f;
+					}
+				}
+				//Landmine collision check with player
+				if(landmine.getHitBox().overlaps(player.getHitBox()) && landmine.isAlive) {
+					landmine.setDead();
+					dying.setVolume(dying.play(), 0.2f);
+					player.setDying();
+					gameState = GameState.COMPLETE;
 				}
 
 				//Check bomb collision with player
@@ -431,6 +462,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					player.dispose();
 					groundEnemy.dispose();
 					flyingEnemy.dispose();
+					landmine.dispose();
 					for (int i = 0; i < bullets.size(); i++) {
 						bullets.get(i).dispose();
 						bullets.remove(i);
@@ -477,7 +509,9 @@ public class MyGdxGame extends ApplicationAdapter {
 					if (groundEnemy.sprite.getX() < Gdx.graphics.getWidth() - groundEnemy.sprite.getWidth()) {
 						groundEnemy.move(0f);
 					} else {
-						groundEnemy.move(Gdx.graphics.getDeltaTime() * 4f);
+						if(groundEnemy.enemyState == GroundEnemy.EnemyState.MOVING) {
+							groundEnemy.move(Gdx.graphics.getDeltaTime() * 4f);
+						}
 					}
 				}
 
@@ -548,6 +582,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		bombs = new ArrayList<>();
 		flyingEnemy = new FlyingEnemy(player.sprite.getX() + -Gdx.graphics.getWidth() * 2f,
 				61 + player.sprite.getHeight() * 2f, bombs);
+		landmine = new Landmine(player.sprite.getX() + Gdx.graphics.getWidth() * 1.5f, player.sprite.getY(), gameMap);
 
 		camera.update();
 
@@ -561,6 +596,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		shapeRenderer.setProjectionMatrix(camera.combined);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(0,1,0,1);
+		shapeRenderer.rect(landmine.getHitBox().getX(), landmine.getHitBox().getY(),
+				landmine.getHitBox().getWidth(), landmine.getHitBox().getHeight());
 		shapeRenderer.rect(flyingEnemy.getHitBox().getX(), flyingEnemy.getHitBox().getY(),
 				flyingEnemy.getHitBox().getWidth(), flyingEnemy.getHitBox().getHeight());
 		shapeRenderer.rect(groundEnemy.getHitBox().getX(), groundEnemy.getHitBox().getY(),
