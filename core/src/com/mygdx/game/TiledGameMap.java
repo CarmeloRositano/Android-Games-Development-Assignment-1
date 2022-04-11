@@ -33,7 +33,7 @@ public class TiledGameMap extends Widget {
         foregroundOneOffset = 0f;
         foregroundTwoOffset = 0f;
         backgroundOffset = 0f;
-        timeElapsed = 500f;
+        timeElapsed = 0f;
     }
 
     /**
