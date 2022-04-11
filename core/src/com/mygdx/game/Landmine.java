@@ -29,7 +29,6 @@ public class Landmine {
 
     public void move(float dt, MyGdxGame.GameState gameState) {
         if(gameState != MyGdxGame.GameState.PLAYING) return;
-        System.out.println("LANDMINE X: " + sprite.getX());
         this.delta.x = -(((Player.getConstantSpeed() + (gameMap.timeElapsed)) * 0.05f) / Gdx.graphics.getDeltaTime() * dt);
 
         sprite.translate(delta.x, delta.y);

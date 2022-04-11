@@ -82,6 +82,9 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	@Override
 	public void create () {
+
+		Gdx.graphics.setWindowedMode(800, 480);
+
 		rand = new Random();
 
 		shapeRenderer = new ShapeRenderer();
@@ -323,8 +326,6 @@ public class MyGdxGame extends ApplicationAdapter {
 				} else {
 					flyingEnemy.move(Gdx.graphics.getDeltaTime(), player);
 				}
-
-				System.out.println(groundEnemy.sprite.getX());
 
 				//Landmine
 				if(landmine.sprite.getX() < Gdx.graphics.getWidth() - landmine.sprite.getWidth()) {
