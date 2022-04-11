@@ -230,7 +230,6 @@ public class MyGdxGame extends ApplicationAdapter {
 				break;
 		}
 		uiBatch.end();
-		ESPHitBoxView();
 	}
 
 	/**
@@ -382,11 +381,13 @@ public class MyGdxGame extends ApplicationAdapter {
 				}
 
 				//Landmine collision with player projectile
-				for(int i = 0; i < bullets.size(); i++) {
-					if(bullets.get(i).getHitBox().overlaps(landmine.getHitBox())) {
-						dying.setVolume(dying.play(), 0.2f);
-						landmine.setDead();
-						score += 25f;
+				if(landmine.isAlive) {
+					for(int i = 0; i < bullets.size(); i++) {
+						if(bullets.get(i).getHitBox().overlaps(landmine.getHitBox())) {
+							dying.setVolume(dying.play(), 0.2f);
+							landmine.setDead();
+							score += 25f;
+						}
 					}
 				}
 				//Landmine collision check with player
